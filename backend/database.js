@@ -1,32 +1,68 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const dbPath = path.resolve(__dirname, 'gaming_miniapp.db');
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error connecting to database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database.');
+// Supabase PostgreSQL Connection Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Required for secure external connections to Supabase
   }
 });
 
+// A wrapper to match the SQLite API (db.run, db.get, db.all)
+// Translates "?" placeholders to PostgreSQL "$1", "$2", etc. formats
+const db = {
+  run: (sql, params, callback) => {
+    let index = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${index++}`);
+    pool.query(pgSql, params || [], (err, res) => {
+      if (callback) {
+        if (err) callback(err);
+        else callback(null, { lastID: res.insertId || (res.rows && res.rows[0] ? res.rows[0].id : null), changes: res.rowCount });
+      }
+    });
+  },
+  get: (sql, params, callback) => {
+    let index = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${index++}`);
+    pool.query(pgSql, params || [], (err, res) => {
+      if (callback) {
+        if (err) callback(err);
+        else callback(null, res.rows[0]);
+      }
+    });
+  },
+  all: (sql, params, callback) => {
+    let index = 1;
+    const pgSql = sql.replace(/\?/g, () => `$${index++}`);
+    pool.query(pgSql, params || [], (err, res) => {
+      if (callback) {
+        if (err) callback(err);
+        else callback(null, res.rows);
+      }
+    });
+  },
+  serialize: (fn) => fn() // Postgres operates concurrently by default
+};
+
 function initDatabase() {
+  // Create tables using PostgreSQL syntax
   db.serialize(() => {
     // 1. Users Table
     db.run(`
       CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        telegram_id TEXT UNIQUE,
-        username TEXT NOT NULL,
-        email TEXT,
+        id SERIAL PRIMARY KEY,
+        telegram_id VARCHAR(255) UNIQUE,
+        username VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
         level INTEGER DEFAULT 1,
         xp INTEGER DEFAULT 0,
-        balance REAL DEFAULT 0.0,
+        balance DOUBLE PRECISION DEFAULT 0.0,
         points INTEGER DEFAULT 0,
         premium_status INTEGER DEFAULT 0,
-        premium_expiry TEXT,
+        premium_expiry VARCHAR(255),
         login_streak INTEGER DEFAULT 0,
-        last_login_date TEXT,
+        last_login_date VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -34,133 +70,123 @@ function initDatabase() {
     // 2. Tasks Table
     db.run(`
       CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
         description TEXT,
-        reward_type TEXT DEFAULT 'balance', -- 'balance' or 'points'
-        reward_amount REAL DEFAULT 0.0,
-        is_premium INTEGER DEFAULT 0, -- 0 = Free, 1 = Premium
-        category TEXT DEFAULT 'easy', -- 'easy', 'premium'
+        reward_type VARCHAR(50) DEFAULT 'balance',
+        reward_amount DOUBLE PRECISION DEFAULT 0.0,
+        is_premium INTEGER DEFAULT 0,
+        category VARCHAR(50) DEFAULT 'easy',
         url TEXT
       )
     `);
 
-    // 3. User Tasks Table (Completion status)
+    // 3. User Tasks Table
     db.run(`
       CREATE TABLE IF NOT EXISTS user_tasks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        task_id INTEGER,
-        status TEXT DEFAULT 'pending', -- 'started', 'completed', 'pending'
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        task_id INTEGER REFERENCES tasks(id),
+        status VARCHAR(50) DEFAULT 'pending',
         proof TEXT,
         completed_at TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(task_id) REFERENCES tasks(id),
-        UNIQUE(user_id, task_id)
+        CONSTRAINT unique_user_task UNIQUE(user_id, task_id)
       )
     `);
 
-    // 4. Challenges Table (templates)
+    // 4. Challenges Table
     db.run(`
       CREATE TABLE IF NOT EXISTS challenges (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
         description TEXT,
-        type TEXT DEFAULT 'daily', -- 'daily', 'weekly', 'streak'
+        type VARCHAR(50) DEFAULT 'daily',
         target_count INTEGER DEFAULT 1,
-        reward_amount REAL DEFAULT 0.0,
+        reward_amount DOUBLE PRECISION DEFAULT 0.0,
         reward_points INTEGER DEFAULT 0,
-        days_limit INTEGER DEFAULT 7
+        days_limit INTEGER DEFAULT 1
       )
     `);
 
-    // 5. User Challenges Table (progress tracking)
+    // 5. User Challenges Table
     db.run(`
       CREATE TABLE IF NOT EXISTS user_challenges (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        challenge_id INTEGER,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        challenge_id INTEGER REFERENCES challenges(id),
         current_progress INTEGER DEFAULT 0,
-        completed INTEGER DEFAULT 0, -- 0 = False, 1 = True
+        completed INTEGER DEFAULT 0,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(challenge_id) REFERENCES challenges(id),
-        UNIQUE(user_id, challenge_id)
+        CONSTRAINT unique_user_challenge UNIQUE(user_id, challenge_id)
       )
     `);
 
-    // 6. Transactions Table (wallet history)
+    // 6. Transactions Table
     db.run(`
       CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        type TEXT NOT NULL, -- 'withdrawal', 'task_earning', 'daily_bonus', 'challenge_reward'
-        amount REAL DEFAULT 0.0,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        type VARCHAR(50) NOT NULL,
+        amount DOUBLE PRECISION DEFAULT 0.0,
         points INTEGER DEFAULT 0,
-        status TEXT DEFAULT 'completed', -- 'completed', 'pending', 'failed'
+        status VARCHAR(50) DEFAULT 'completed',
         details TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // 7. Achievements Table
     db.run(`
       CREATE TABLE IF NOT EXISTS achievements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT UNIQUE NOT NULL,
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) UNIQUE NOT NULL,
         description TEXT,
-        badge_icon TEXT
+        badge_icon VARCHAR(50)
       )
     `);
 
     // 8. User Achievements Table
     db.run(`
       CREATE TABLE IF NOT EXISTS user_achievements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        achievement_id INTEGER,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        achievement_id INTEGER REFERENCES achievements(id),
         earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(achievement_id) REFERENCES achievements(id),
-        UNIQUE(user_id, achievement_id)
+        CONSTRAINT unique_user_achievement UNIQUE(user_id, achievement_id)
       )
     `);
 
     // 9. Referrals Table
     db.run(`
       CREATE TABLE IF NOT EXISTS referrals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        referrer_id INTEGER,
-        referred_id INTEGER,
-        status TEXT DEFAULT 'joined', -- 'joined', 'active'
+        id SERIAL PRIMARY KEY,
+        referrer_id INTEGER REFERENCES users(id),
+        referred_id INTEGER REFERENCES users(id),
+        status VARCHAR(50) DEFAULT 'joined',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(referrer_id) REFERENCES users(id),
-        FOREIGN KEY(referred_id) REFERENCES users(id),
-        UNIQUE(referrer_id, referred_id)
+        CONSTRAINT unique_referral UNIQUE(referrer_id, referred_id)
       )
     `);
 
-    // 10. Leaderboard Table (rank cache)
+    // 10. Leaderboard Table
     db.run(`
       CREATE TABLE IF NOT EXISTS leaderboard (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER UNIQUE,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE REFERENCES users(id),
         rank INTEGER,
         points INTEGER DEFAULT 0,
-        earnings REAL DEFAULT 0.0,
-        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        earnings DOUBLE PRECISION DEFAULT 0.0,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
     // 11. Surveys Table
     db.run(`
       CREATE TABLE IF NOT EXISTS surveys (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
         description TEXT,
-        reward_amount REAL DEFAULT 0.0,
+        reward_amount DOUBLE PRECISION DEFAULT 0.0,
         reward_points INTEGER DEFAULT 0,
         time_estimate INTEGER DEFAULT 5,
         questions_json TEXT
@@ -170,33 +196,34 @@ function initDatabase() {
     // 12. User Surveys Table
     db.run(`
       CREATE TABLE IF NOT EXISTS user_surveys (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        survey_id INTEGER,
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        survey_id INTEGER REFERENCES surveys(id),
         completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(user_id) REFERENCES users(id),
-        FOREIGN KEY(survey_id) REFERENCES surveys(id),
-        UNIQUE(user_id, survey_id)
+        CONSTRAINT unique_user_survey UNIQUE(user_id, survey_id)
       )
     `);
 
+    // Trigger seed check
     seedData();
   });
 }
 
 function seedData() {
-  db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
+  db.get("SELECT COUNT(*) as count FROM users", [], (err, row) => {
     if (err) return console.error(err);
-    if (row.count > 0) {
-      console.log("Database already initialized and seeded.");
+    if (row && parseInt(row.count) > 0) {
+      console.log("Supabase database already initialized and seeded.");
       return;
     }
 
-    console.log("Seeding initial data...");
+    console.log("Seeding initial data into Supabase...");
 
+    // Seed test users
     db.run(`
       INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
       VALUES (1, 'telegram_12345', 'Aditya Kumar', 'aditya@email.com', 12, 4250, 24.50, 8420, 1, '2025-12-31', 7, '2026-06-25')
+      ON CONFLICT DO NOTHING
     `);
 
     const otherUsers = [
@@ -211,9 +238,11 @@ function seedData() {
       db.run(`
         INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '2026-06-25')
+        ON CONFLICT DO NOTHING
       `, [u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7], u[8], '2025-12-31']);
     });
 
+    // Seed leaderboard caches
     const ranks = [
       [2, 1, 150000, 2450.00],
       [3, 2, 120000, 2120.00],
@@ -223,29 +252,32 @@ function seedData() {
       [1, 47, 8420, 24.50]
     ];
     ranks.forEach(r => {
-      db.run(`INSERT INTO leaderboard (user_id, rank, points, earnings) VALUES (?, ?, ?, ?)`, r);
+      db.run(`INSERT INTO leaderboard (user_id, rank, points, earnings) VALUES (?, ?, ?, ?) ON CONFLICT (user_id) DO NOTHING`, r);
     });
 
+    // Seed initial tasks
     const initialTasks = [
-      ['Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
-      ['Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-      ['Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
-      ['Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
-      ['Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
-      ['Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
-      ['Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
-      ['Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
-      ['Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
-      ['Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
+      [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
+      [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
+      [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
+      [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
+      [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
+      [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
+      [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
+      [8, 'Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
+      [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
+      [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
     ];
 
     initialTasks.forEach(t => {
       db.run(`
-        INSERT INTO tasks (title, description, reward_type, reward_amount, is_premium, category, url)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO tasks (id, title, description, reward_type, reward_amount, is_premium, category, url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT DO NOTHING
       `, t);
     });
 
+    // Seed challenges
     const initialChallenges = [
       [1, 'Complete 5 Tasks Daily', 'Complete at least 5 tasks every day', 'daily', 5, 50.00, 0, 7],
       [2, 'Social Media Master', 'Complete all social media tasks (Follow, Like, Comment)', 'weekly', 10, 35.00, 500, 7],
@@ -258,14 +290,15 @@ function seedData() {
       db.run(`
         INSERT INTO challenges (id, title, description, type, target_count, reward_amount, reward_points, days_limit)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT DO NOTHING
       `, c);
     });
 
-    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 1, 5, 0)`);
-    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 2, 6, 0)`);
-    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 3, 1, 0)`);
-    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 4, 2, 0)`);
-    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 5, 42, 0)`);
+    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 1, 5, 0) ON CONFLICT DO NOTHING`);
+    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 2, 6, 0) ON CONFLICT DO NOTHING`);
+    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 3, 1, 0) ON CONFLICT DO NOTHING`);
+    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 4, 2, 0) ON CONFLICT DO NOTHING`);
+    db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 5, 42, 0) ON CONFLICT DO NOTHING`);
 
     db.run(`
       INSERT INTO transactions (user_id, type, amount, points, status, details, created_at)
@@ -276,6 +309,7 @@ function seedData() {
       VALUES (1, 'task_earning', 15.50, 0, 'completed', 'Task Earnings in TON - Multiple Tasks completed', '2026-01-10 14:30:00')
     `);
 
+    // Seed Achievements
     const initialAchievements = [
       [1, 'First Task', 'Completed your first earning task', '⭐'],
       [2, '$100 Earned', 'Earned over $100 in lifetime earnings', '💰'],
@@ -303,34 +337,21 @@ function seedData() {
       db.run(`
         INSERT INTO achievements (id, name, description, badge_icon)
         VALUES (?, ?, ?, ?)
+        ON CONFLICT DO NOTHING
       `, a);
     });
 
     for (let i = 1; i <= 12; i++) {
-      db.run(`INSERT INTO user_achievements (user_id, achievement_id) VALUES (1, ?)`, [i]);
+      db.run(`INSERT INTO user_achievements (user_id, achievement_id) VALUES (1, ?) ON CONFLICT DO NOTHING`, [i]);
     }
 
-    db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 2, 'active')`);
-    db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 3, 'joined')`);
+    db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 2, 'active') ON CONFLICT DO NOTHING`);
+    db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 3, 'joined') ON CONFLICT DO NOTHING`);
 
-    // Seed mock task completions for calculating trending tasks
-    const mockCompletions = [
-      [2, 1], [3, 1], [4, 1], [5, 1], [6, 1],
-      [2, 2], [3, 2], [4, 2], [5, 2],
-      [2, 3], [3, 3], [4, 3],
-      [2, 4], [3, 4],
-      [2, 5]
-    ];
-    mockCompletions.forEach(mc => {
-      db.run(`
-        INSERT INTO user_tasks (user_id, task_id, status, completed_at)
-        VALUES (?, ?, 'completed', CURRENT_TIMESTAMP)
-      `, mc);
-    });
-
-    // Seed Surveys
+    // Seed surveys
     const initialSurveys = [
       [
+        1,
         'Web3 User Survey', 
         'Help us understand your usage of cryptocurrency and web3 miniapps.', 
         1.50, 
@@ -343,6 +364,7 @@ function seedData() {
         ])
       ],
       [
+        2,
         'Gaming Preferences Poll', 
         'We are building a new TON game. Tell us what you like to play!', 
         0.75, 
@@ -355,6 +377,7 @@ function seedData() {
         ])
       ],
       [
+        3,
         'VPN Usage Feedback', 
         'Feedback on VPN speeds and privacy setups.', 
         1.00, 
@@ -366,6 +389,7 @@ function seedData() {
         ])
       ],
       [
+        4,
         'Telegram Features Poll', 
         'Tell us what features you want in our Telegram bot ecosystem.', 
         0.50, 
@@ -380,16 +404,18 @@ function seedData() {
 
     initialSurveys.forEach(s => {
       db.run(`
-        INSERT INTO surveys (title, description, reward_amount, reward_points, time_estimate, questions_json)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO surveys (id, title, description, reward_amount, reward_points, time_estimate, questions_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT DO NOTHING
       `, s);
     });
 
-    console.log("Database successfully seeded.");
+    console.log("Supabase PostgreSQL successfully seeded!");
   });
 }
 
 module.exports = {
   db,
-  initDatabase
+  initDatabase,
+  pool
 };
