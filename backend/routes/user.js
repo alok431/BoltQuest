@@ -6,6 +6,47 @@ const { db } = require('../database');
 // In a production app, we would verify Telegram WebApp initData here.
 const DEFAULT_USER_ID = 1;
 
+// POST /api/user/auth
+router.post('/auth', (req, res) => {
+  const { telegramId, username, email } = req.body;
+
+  if (!telegramId) {
+    return res.status(400).json({ error: 'telegramId is required' });
+  }
+
+  // Check if user exists by telegram_id
+  db.get('SELECT * FROM users WHERE telegram_id = ?', [telegramId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (user) {
+      // User exists, return user
+      return res.json(user);
+    }
+
+    // New user signup - initial TON balance = 0.0, points = 0, level = 1, xp = 0
+    const isPostgres = !!process.env.DATABASE_URL;
+    const insertSql = isPostgres
+      ? `INSERT INTO users (telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+         VALUES (?, ?, ?, 1, 0, 0.0, 0, 0, 0) RETURNING id`
+      : `INSERT INTO users (telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+         VALUES (?, ?, ?, 1, 0, 0.0, 0, 0, 0)`;
+
+    db.run(
+      insertSql,
+      [telegramId, username || 'Telegram User', email || ''],
+      function(insertErr) {
+        if (insertErr) return res.status(500).json({ error: insertErr.message });
+        
+        const newUserId = this.lastID;
+        db.get('SELECT * FROM users WHERE id = ?', [newUserId], (getErr, newUser) => {
+          if (getErr) return res.status(500).json({ error: getErr.message });
+          res.status(201).json(newUser);
+        });
+      }
+    );
+  });
+});
+
 // GET /api/user
 router.get('/', (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;

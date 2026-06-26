@@ -7,6 +7,7 @@ export function useUser(userId) {
   const [error, setError] = useState(null);
 
   const fetchUser = useCallback(async () => {
+    if (!userId) return;
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/user?userId=${userId}`);

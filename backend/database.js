@@ -254,44 +254,6 @@ if (process.env.DATABASE_URL) {
 
       console.log("Seeding initial PostgreSQL data...");
 
-      db.run(`
-        INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
-        VALUES (1, 'telegram_12345', 'Aditya Kumar', 'aditya@email.com', 12, 4250, 24.50, 8420, 1, '2025-12-31', 7, '2026-06-25')
-        ON CONFLICT DO NOTHING
-      `);
-
-      const otherUsers = [
-        [2, 'telegram_001', 'Alex_Crypto', 'alex@crypto.com', 25, 12000, 2450.00, 150000, 1],
-        [3, 'telegram_002', 'Luna_Trader', 'luna@trader.com', 22, 9800, 2120.00, 120000, 1],
-        [4, 'telegram_003', 'John_Web3', 'john@web3.com', 18, 7500, 1890.00, 95000, 0],
-        [5, 'telegram_004', 'Maria_Tasks', 'maria@tasks.com', 15, 5800, 1650.00, 78000, 0],
-        [6, 'telegram_005', 'Sophie_Earn', 'sophie@earn.com', 10, 3900, 980.00, 45000, 0]
-      ];
-
-      otherUsers.forEach(u => {
-        db.run(`
-          INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '2026-06-25')
-          ON CONFLICT DO NOTHING
-        `, [...u, '2025-12-31']);
-      });
-
-      const ranks = [
-        [2, 1, 150000, 2450.00],
-        [3, 2, 120000, 2120.00],
-        [4, 3, 95000, 1890.00],
-        [5, 4, 78000, 1650.00],
-        [6, 5, 45000, 980.00],
-        [1, 47, 8420, 24.50]
-      ];
-      ranks.forEach(r => {
-        db.run(`
-          INSERT INTO leaderboard (user_id, rank, points, earnings)
-          VALUES (?, ?, ?, ?)
-          ON CONFLICT DO NOTHING
-        `, r);
-      });
-
       const initialTasks = [
         [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
         [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
@@ -330,21 +292,6 @@ if (process.env.DATABASE_URL) {
         `, c);
       });
 
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 1, 5, 0) ON CONFLICT DO NOTHING`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 2, 6, 0) ON CONFLICT DO NOTHING`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 3, 1, 0) ON CONFLICT DO NOTHING`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 4, 2, 0) ON CONFLICT DO NOTHING`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 5, 42, 0) ON CONFLICT DO NOTHING`);
-
-      db.run(`
-        INSERT INTO transactions (user_id, type, amount, points, status, details, created_at)
-        VALUES (1, 'withdrawal', -50.00, 0, 'completed', 'TON Wallet Withdrawal to UQDxTONWalletAddressExample', '2026-01-08 12:00:00')
-      `);
-      db.run(`
-        INSERT INTO transactions (user_id, type, amount, points, status, details, created_at)
-        VALUES (1, 'task_earning', 15.50, 0, 'completed', 'Task Earnings in TON - Multiple Tasks completed', '2026-01-10 14:30:00')
-      `);
-
       // Seed Achievements
       const initialAchievements = [
         [1, 'First Task', 'Completed your first earning task', '⭐'],
@@ -376,13 +323,6 @@ if (process.env.DATABASE_URL) {
           ON CONFLICT DO NOTHING
         `, a);
       });
-
-      for (let i = 1; i <= 12; i++) {
-        db.run(`INSERT INTO user_achievements (user_id, achievement_id) VALUES (1, ?) ON CONFLICT DO NOTHING`, [i]);
-      }
-
-      db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 2, 'active') ON CONFLICT DO NOTHING`);
-      db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 3, 'joined') ON CONFLICT DO NOTHING`);
 
       // Seed surveys
       const initialSurveys = [
@@ -646,38 +586,6 @@ if (process.env.DATABASE_URL) {
 
       console.log("Seeding initial SQLite data...");
 
-      db.run(`
-        INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
-        VALUES (1, 'telegram_12345', 'Aditya Kumar', 'aditya@email.com', 12, 4250, 24.50, 8420, 1, '2025-12-31', 7, '2026-06-25')
-      `);
-
-      const otherUsers = [
-        [2, 'telegram_001', 'Alex_Crypto', 'alex@crypto.com', 25, 12000, 2450.00, 150000, 1],
-        [3, 'telegram_002', 'Luna_Trader', 'luna@trader.com', 22, 9800, 2120.00, 120000, 1],
-        [4, 'telegram_003', 'John_Web3', 'john@web3.com', 18, 7500, 1890.00, 95000, 0],
-        [5, 'telegram_004', 'Maria_Tasks', 'maria@tasks.com', 15, 5800, 1650.00, 78000, 0],
-        [6, 'telegram_005', 'Sophie_Earn', 'sophie@earn.com', 10, 3900, 980.00, 45000, 0]
-      ];
-
-      otherUsers.forEach(u => {
-        db.run(`
-          INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, premium_expiry, login_streak, last_login_date)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '2026-06-25')
-        `, [...u, '2025-12-31']);
-      });
-
-      const ranks = [
-        [2, 1, 150000, 2450.00],
-        [3, 2, 120000, 2120.00],
-        [4, 3, 95000, 1890.00],
-        [5, 4, 78000, 1650.00],
-        [6, 5, 45000, 980.00],
-        [1, 47, 8420, 24.50]
-      ];
-      ranks.forEach(r => {
-        db.run(`INSERT INTO leaderboard (user_id, rank, points, earnings) VALUES (?, ?, ?, ?)`, r);
-      });
-
       const initialTasks = [
         ['Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
         ['Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
@@ -713,21 +621,6 @@ if (process.env.DATABASE_URL) {
         `, c);
       });
 
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 1, 5, 0)`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 2, 6, 0)`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 3, 1, 0)`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 4, 2, 0)`);
-      db.run(`INSERT INTO user_challenges (user_id, challenge_id, current_progress, completed) VALUES (1, 5, 42, 0)`);
-
-      db.run(`
-        INSERT INTO transactions (user_id, type, amount, points, status, details, created_at)
-        VALUES (1, 'withdrawal', -50.00, 0, 'completed', 'TON Wallet Withdrawal to UQDxTONWalletAddressExample', '2026-01-08 12:00:00')
-      `);
-      db.run(`
-        INSERT INTO transactions (user_id, type, amount, points, status, details, created_at)
-        VALUES (1, 'task_earning', 15.50, 0, 'completed', 'Task Earnings in TON - Multiple Tasks completed', '2026-01-10 14:30:00')
-      `);
-
       const initialAchievements = [
         [1, 'First Task', 'Completed your first earning task', '⭐'],
         [2, '$100 Earned', 'Earned over $100 in lifetime earnings', '💰'],
@@ -756,27 +649,6 @@ if (process.env.DATABASE_URL) {
           INSERT INTO achievements (id, name, description, badge_icon)
           VALUES (?, ?, ?, ?)
         `, a);
-      });
-
-      for (let i = 1; i <= 12; i++) {
-        db.run(`INSERT INTO user_achievements (user_id, achievement_id) VALUES (1, ?)`, [i]);
-      }
-
-      db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 2, 'active')`);
-      db.run(`INSERT INTO referrals (referrer_id, referred_id, status) VALUES (1, 3, 'joined')`);
-
-      const mockCompletions = [
-        [2, 1], [3, 1], [4, 1], [5, 1], [6, 1],
-        [2, 2], [3, 2], [4, 2], [5, 2],
-        [2, 3], [3, 3], [4, 3],
-        [2, 4], [3, 4],
-        [2, 5]
-      ];
-      mockCompletions.forEach(mc => {
-        db.run(`
-          INSERT INTO user_tasks (user_id, task_id, status, completed_at)
-          VALUES (?, ?, 'completed', CURRENT_TIMESTAMP)
-        `, mc);
       });
 
       const initialSurveys = [
