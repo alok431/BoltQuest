@@ -19,9 +19,7 @@ export function useTasks(userId, refreshUserStats) {
   const fetchSurveys = useCallback(async () => {
     try {
       setLoadingSurveys(true);
-      const res = await fetch(`${API_BASE}/surveys`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/surveys?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch surveys');
       const data = await res.json();
       setSurveys(data);
@@ -34,11 +32,10 @@ export function useTasks(userId, refreshUserStats) {
 
   const completeSurvey = async (surveyId, answers) => {
     try {
-      const res = await fetch(`${API_BASE}/surveys/complete`, {
+      const res = await fetch(`${API_BASE}/surveys/complete?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ surveyId, answers })
       });
@@ -62,9 +59,7 @@ export function useTasks(userId, refreshUserStats) {
   // 1. Tasks
   const fetchTrendingTasks = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/tasks/trending`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/tasks/trending?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch trending tasks');
       const data = await res.json();
       setTrendingTasks(data);
@@ -76,9 +71,7 @@ export function useTasks(userId, refreshUserStats) {
   const fetchTasks = useCallback(async () => {
     try {
       setLoadingTasks(true);
-      const res = await fetch(`${API_BASE}/tasks`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/tasks?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
       setTasks(data);
@@ -91,11 +84,10 @@ export function useTasks(userId, refreshUserStats) {
 
   const completeTask = async (taskId, proof = '') => {
     try {
-      const res = await fetch(`${API_BASE}/tasks/complete`, {
+      const res = await fetch(`${API_BASE}/tasks/complete?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ taskId, proof })
       });
@@ -124,9 +116,7 @@ export function useTasks(userId, refreshUserStats) {
   const fetchChallenges = useCallback(async () => {
     try {
       setLoadingChallenges(true);
-      const res = await fetch(`${API_BASE}/challenges`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/challenges?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch challenges');
       const data = await res.json();
       setChallenges(data);
@@ -156,9 +146,7 @@ export function useTasks(userId, refreshUserStats) {
   const fetchAchievements = useCallback(async () => {
     try {
       setLoadingAchievements(true);
-      const res = await fetch(`${API_BASE}/achievements`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/achievements?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch achievements');
       const data = await res.json();
       setAchievements(data);
@@ -172,9 +160,8 @@ export function useTasks(userId, refreshUserStats) {
   // 5. Premium Subscription Actions
   const subscribePremium = async () => {
     try {
-      const res = await fetch(`${API_BASE}/premium/subscribe`, {
-        method: 'POST',
-        headers: { 'user-id': userId }
+      const res = await fetch(`${API_BASE}/premium/subscribe?userId=${userId}`, {
+        method: 'POST'
       });
       if (!res.ok) throw new Error('Failed to subscribe');
       const data = await res.json();
@@ -192,9 +179,8 @@ export function useTasks(userId, refreshUserStats) {
 
   const cancelPremium = async () => {
     try {
-      const res = await fetch(`${API_BASE}/premium/cancel`, {
-        method: 'POST',
-        headers: { 'user-id': userId }
+      const res = await fetch(`${API_BASE}/premium/cancel?userId=${userId}`, {
+        method: 'POST'
       });
       if (!res.ok) throw new Error('Failed to cancel subscription');
       const data = await res.json();

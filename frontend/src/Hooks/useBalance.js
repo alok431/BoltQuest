@@ -9,9 +9,7 @@ export function useBalance(userId, refreshUserStats) {
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/wallet/transactions`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/wallet/transactions?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch transactions');
       const data = await res.json();
       setTransactions(data);
@@ -26,11 +24,10 @@ export function useBalance(userId, refreshUserStats) {
 
   const requestWithdrawal = async (amount, method, address) => {
     try {
-      const res = await fetch(`${API_BASE}/wallet/withdraw`, {
+      const res = await fetch(`${API_BASE}/wallet/withdraw?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ amount, method, address })
       });

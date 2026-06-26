@@ -26,6 +26,13 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Middleware to normalize user-id header from query parameters or body
+app.use((req, res, next) => {
+  const userId = req.query.userId || req.headers['user-id'] || req.body?.userId || '1';
+  req.headers['user-id'] = String(userId);
+  next();
+});
+
 // Initialize Database Tables
 initDatabase();
 

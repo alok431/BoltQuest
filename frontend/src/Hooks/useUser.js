@@ -9,9 +9,7 @@ export function useUser(userId) {
   const fetchUser = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/user`, {
-        headers: { 'user-id': userId }
-      });
+      const res = await fetch(`${API_BASE}/user?userId=${userId}`);
       if (!res.ok) throw new Error('Failed to fetch user');
       const data = await res.json();
       setUser(data);
@@ -26,11 +24,10 @@ export function useUser(userId) {
 
   const claimDailyBonus = async () => {
     try {
-      const res = await fetch(`${API_BASE}/user/daily-bonus`, {
+      const res = await fetch(`${API_BASE}/user/daily-bonus?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         }
       });
       if (!res.ok) throw new Error('Failed to claim daily bonus');
@@ -46,11 +43,10 @@ export function useUser(userId) {
 
   const updateSettings = async (settings) => {
     try {
-      const res = await fetch(`${API_BASE}/user/settings`, {
+      const res = await fetch(`${API_BASE}/user/settings?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(settings)
       });

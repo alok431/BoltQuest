@@ -58,11 +58,10 @@ export default function App() {
     const webapp = window.Telegram?.WebApp;
     const startParam = webapp?.initDataUnsafe?.start_param;
     if (startParam && userId) {
-      fetch(`${API_BASE}/user/referral`, {
+      fetch(`${API_BASE}/user/referral?userId=${userId}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'user-id': userId
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ referrerId: startParam })
       })
