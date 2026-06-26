@@ -99,24 +99,13 @@ router.post('/referral', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (row) return res.json({ success: true, message: 'Referral already registered' });
 
-    // Insert new referral
+    // Insert new referral as 'pending' (anti-fraud check: rewarded on first completed task)
     db.run(
       'INSERT INTO referrals (referrer_id, referred_id, status) VALUES (?, ?, ?)',
-      [referrerId, userId, 'joined'],
+      [referrerId, userId, 'pending'],
       function(insertErr) {
         if (insertErr) return res.status(500).json({ error: insertErr.message });
-        
-        // Reward the referrer with 500 points and 0.50 TON
-        db.run('UPDATE users SET points = points + 500, balance = balance + 0.50 WHERE id = ?', [referrerId]);
-        
-        // Record reward transaction for referrer
-        db.run(
-          `INSERT INTO transactions (user_id, type, amount, points, status, details)
-           VALUES (?, 'referral_bonus', 0.50, 500, 'completed', 'Referred new user (ID: ${userId})')`,
-          [referrerId]
-        );
-
-        res.json({ success: true, message: 'Referral successfully registered and rewarded' });
+        res.json({ success: true, message: 'Referral registered (pending verification)' });
       }
     );
   });

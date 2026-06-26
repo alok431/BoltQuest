@@ -112,6 +112,26 @@ function rewardUserForTask(userId, task) {
             // Update challenges progress
             updateChallengesProgress(userId, task);
 
+            // Anti-fraud Referral check: If this user has a pending referral, reward the referrer now that they completed their first task
+            db.get('SELECT * FROM referrals WHERE referred_id = ? AND status = \'pending\'', [userId], (refErr, referral) => {
+              if (!refErr && referral) {
+                const referrerId = referral.referrer_id;
+                db.run('UPDATE referrals SET status = \'completed\' WHERE id = ?', [referral.id], (upRefErr) => {
+                  if (!upRefErr) {
+                    db.run('UPDATE users SET points = points + 500, balance = balance + 0.50 WHERE id = ?', [referrerId], (upUsrErr) => {
+                      if (!upUsrErr) {
+                        db.run(
+                          `INSERT INTO transactions (user_id, type, amount, points, status, details)
+                           VALUES (?, 'referral_bonus', 0.50, 500, 'completed', ?)`,
+                          [referrerId, `Referral verified: User (ID: ${userId}) completed their first task`]
+                        );
+                      }
+                    });
+                  }
+                });
+              }
+            });
+
             resolve({
               success: true,
               status: 'completed',

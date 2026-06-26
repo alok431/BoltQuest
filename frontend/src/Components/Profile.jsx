@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Settings, Shield, Moon, Mail, Edit3, Loader2 } from 'lucide-react';
+import { User, Settings, Shield, Moon, Mail, Edit3, Loader2, Users, Copy, Share2, Check } from 'lucide-react';
 
 export default function Profile({ user, updateSettings, theme, setTheme, tgUser }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -11,6 +11,22 @@ export default function Profile({ user, updateSettings, theme, setTheme, tgUser 
   // Settings mock toggles
   const [emailNotif, setEmailNotif] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+  const inviteUserId = tgUser?.id || user?.id || 1;
+  const referralLink = `https://t.me/BoltQuest_bot/app?startapp=${inviteUserId}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareLink = () => {
+    const text = encodeURIComponent("Join BoltQuest, complete simple tasks, and earn real TON rewards! ⚡💎");
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${text}`;
+    window.open(shareUrl, '_blank');
+  };
 
 
   const handleSave = async (e) => {
@@ -130,6 +146,44 @@ export default function Profile({ user, updateSettings, theme, setTheme, tgUser 
           <div className="stat-label">XP Points</div>
           <div className="stat-value">{(user.xp / 1000).toFixed(1)}K</div>
         </div>
+      </div>
+
+      <div className="section-title">
+        <Users size={12} /> Referral Program
+      </div>
+
+      <div className="card" style={{ background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 136, 255, 0.02) 100%)', border: '1px solid var(--border-color-glow)' }}>
+        <div style={{ marginBottom: '12px' }}>
+          <div className="task-title" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🤝 Invite Friends & Earn TON
+          </div>
+          <div className="task-desc" style={{ marginTop: '4px' }}>
+            Share your referral link. You get <strong style={{ color: 'var(--accent-cyan)' }}>+0.50 TON</strong> and <strong style={{ color: 'var(--accent-cyan)' }}>+500 Points</strong> once they complete their first task.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '12px' }}>
+          <div style={{ flex: '1', fontSize: '11px', fontFamily: 'monospace', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {referralLink}
+          </div>
+          <button 
+            type="button"
+            onClick={handleCopyLink}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+            title="Copy Link"
+          >
+            {copied ? <Check size={14} color="var(--accent-green)" /> : <Copy size={14} color="var(--text-secondary)" />}
+          </button>
+        </div>
+
+        <button 
+          type="button"
+          className="btn-primary" 
+          onClick={handleShareLink}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px' }}
+        >
+          <Share2 size={14} /> Invite a Friend
+        </button>
       </div>
 
       <div className="section-title">
