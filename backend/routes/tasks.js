@@ -44,11 +44,12 @@ router.get('/trending', (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;
 
   const query = `
-    SELECT t.*, COUNT(ut.id) as completion_count,
+    SELECT t.id, t.title, t.description, t.reward_type, t.reward_amount, t.is_premium, t.category, t.url,
+           COUNT(ut.id) as completion_count,
            (SELECT status FROM user_tasks WHERE user_id = ? AND task_id = t.id) as user_status
     FROM tasks t
     LEFT JOIN user_tasks ut ON t.id = ut.task_id AND ut.status = 'completed'
-    GROUP BY t.id
+    GROUP BY t.id, t.title, t.description, t.reward_type, t.reward_amount, t.is_premium, t.category, t.url
     ORDER BY completion_count DESC, t.id ASC
     LIMIT 5
   `;
