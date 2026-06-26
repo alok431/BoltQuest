@@ -27,6 +27,7 @@ export default function App() {
   const { 
     user, 
     loading: userLoading, 
+    error: userError,
     refreshUser, 
     claimDailyBonus, 
     updateSettings 
@@ -90,6 +91,18 @@ export default function App() {
             animation: 'spin 1s linear infinite'
           }} />
           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Loading BoltQuest...</span>
+        </div>
+      );
+    }
+
+    if (userError) {
+      return (
+        <div style={{ padding: '24px', color: '#ff4d4d', textAlign: 'center', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.2)', borderRadius: '12px', margin: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px' }}>⚠️ Error Connecting to Backend</h3>
+          <p style={{ margin: 0, fontSize: '12px', opacity: 0.8 }}>{userError}</p>
+          <button onClick={refreshUser} style={{ padding: '8px 16px', background: '#ff4d4d', border: 'none', borderRadius: '6px', color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>
+            Retry Connection
+          </button>
         </div>
       );
     }
