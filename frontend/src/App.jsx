@@ -123,7 +123,7 @@ export default function App() {
           />
         );
       case 'profile':
-        return <Profile user={user} updateSettings={updateSettings} theme={theme} setTheme={setTheme} />;
+        return <Profile user={user} updateSettings={updateSettings} theme={theme} setTheme={setTheme} tgUser={tgUser} />;
       case 'surveys':
         return <Surveys surveys={surveys} completeSurvey={completeSurvey} user={user} />;
       case 'premium':

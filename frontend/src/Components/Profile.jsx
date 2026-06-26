@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Settings, Shield, Moon, Mail, Edit3, Loader2 } from 'lucide-react';
 
-export default function Profile({ user, updateSettings, theme, setTheme }) {
+export default function Profile({ user, updateSettings, theme, setTheme, tgUser }) {
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(user?.username || 'Aditya Kumar');
   const [email, setEmail] = useState(user?.email || 'aditya@email.com');
@@ -90,8 +90,11 @@ export default function Profile({ user, updateSettings, theme, setTheme }) {
               <div style={{ fontSize: '32px' }}>👨‍💼</div>
               <div>
                 <div className="task-title" style={{ fontSize: '14px' }}>{user.username}</div>
-                <div className="task-desc">
-                  Level {user.level} {user.premium_status === 1 ? 'Premium Member' : 'Free Member'}
+                <div className="task-desc" style={{ marginBottom: '2px' }}>
+                  Level {user.level} • {user.premium_status === 1 ? 'Premium Member' : 'Free Member'}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  Telegram ID: <span style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)', fontWeight: '600' }}>{tgUser?.id || user?.telegram_id || 'Not connected'}</span>
                 </div>
               </div>
             </div>
