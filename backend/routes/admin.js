@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db, initDatabase } = require('../database');
+const { db } = require('../database');
 const { approveTask, rejectTask } = require('../services/taskVerification');
 
 // GET /api/admin/pending-tasks
@@ -89,65 +89,6 @@ router.post('/add-task', (req, res) => {
       res.json({ success: true, message: 'Task added successfully!', taskId: this.lastID });
     }
   );
-});
-
-// GET /api/admin/db-schema (Temporary schema inspector)
-router.get('/db-schema', (req, res) => {
-  db.all(`
-    SELECT table_name, column_name, data_type 
-    FROM information_schema.columns 
-    WHERE table_schema = 'public'
-    ORDER BY table_name, ordinal_position;
-  `, [], (err, rows) => {
-    if (err) {
-      db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (sqliteErr, sqliteRows) => {
-        if (sqliteErr) return res.status(500).json({ error: err.message, sqliteError: sqliteErr.message });
-        res.json({ type: 'sqlite', tables: sqliteRows });
-      });
-    } else {
-      res.json({ type: 'postgres', schema: rows });
-    }
-  });
-});
-
-// POST /api/admin/db-reset (Temporary database reset/recreation)
-router.post('/db-reset', (req, res) => {
-  const tables = [
-    'user_ad_views', 'user_promos', 'user_tasks', 'user_surveys', 'user_challenges',
-    'referrals', 'leaderboard', 'transactions', 'tasks', 'surveys', 'user_achievements', 'achievements',
-    'users', 'ads'
-  ];
-  
-  const dropQueries = tables.map(t => `DROP TABLE IF EXISTS ${t} CASCADE;`);
-  let executedCount = 0;
-  let errors = [];
-  
-  function runNextQuery() {
-    if (executedCount < dropQueries.length) {
-      const q = dropQueries[executedCount];
-      db.run(q, [], (err) => {
-        if (err) errors.push({ query: q, error: err.message });
-        executedCount++;
-        runNextQuery();
-      });
-    } else {
-      // Re-initialize tables and seed data
-      try {
-        initDatabase();
-        setTimeout(() => {
-          res.json({
-            success: errors.length === 0,
-            message: 'Database tables dropped, recreated, and seeded successfully.',
-            errors: errors.length > 0 ? errors : null
-          });
-        }, 1000); // Small delay to let initDatabase query executions queue up
-      } catch (initErr) {
-        res.status(500).json({ error: initErr.message, dropErrors: errors });
-      }
-    }
-  }
-  
-  runNextQuery();
 });
 
 module.exports = router;
