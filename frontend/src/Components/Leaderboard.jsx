@@ -19,14 +19,19 @@ export default function Leaderboard({ leaderboard, user }) {
     return 'rank';
   };
 
-  const topReferrals = [
-    { rank: 1, username: 'Alex_Crypto', country: 'USA', referrals: 142 },
-    { rank: 2, username: 'Luna_Trader', country: 'UK', referrals: 118 },
-    { rank: 3, username: 'John_Web3', country: 'Canada', referrals: 95 },
-    { rank: 4, username: 'Maria_Tasks', country: 'Spain', referrals: 74 },
-    { rank: 5, username: 'Sophie_Earn', country: 'France', referrals: 48 },
-    { rank: 47, username: user?.username || 'Aditya Kumar', country: 'Global', referrals: 12 }
-  ];
+  const earners = Array.isArray(leaderboard) ? leaderboard : (leaderboard?.earners || []);
+  const referrals = leaderboard?.referrals || [];
+
+  const displayReferrals = referrals.slice(0, 6);
+
+  // Find user's rankings dynamically
+  const myRefRanking = referrals.find(p => p.username === user?.username);
+  const myRefRank = myRefRanking ? myRefRanking.rank : (referrals.length > 0 ? referrals.length + 1 : 1);
+  const myRefCount = user?.stats?.referralsCount || 0;
+
+  const myEarnRanking = earners.find(p => p.username === user?.username);
+  const myEarnRank = myEarnRanking ? myEarnRanking.rank : (earners.length > 0 ? earners.length + 1 : 1);
+  const myEarnAmount = user?.balance || 0.00;
 
   return (
     <div id="leaderboard" className="tab-content-fade">
@@ -35,7 +40,7 @@ export default function Leaderboard({ leaderboard, user }) {
         <Users size={12} color="var(--accent-cyan)" /> Global Top Referrals
       </div>
 
-      {topReferrals.map((player, idx) => {
+      {displayReferrals.map((player, idx) => {
         const isSelf = player.username === user?.username;
         return (
           <div key={`ref-${idx}`} className={`leaderboard-row ${isSelf ? 'user-row' : ''}`}>
@@ -62,7 +67,7 @@ export default function Leaderboard({ leaderboard, user }) {
         <Trophy size={12} color="var(--accent-gold)" /> Global Top Earners
       </div>
 
-      {leaderboard.slice(0, 6).map((player, idx) => {
+      {earners.slice(0, 6).map((player, idx) => {
         const isSelf = player.username === user?.username;
         return (
           <div key={`earn-${idx}`} className={`leaderboard-row ${isSelf ? 'user-row' : ''}`}>
@@ -87,11 +92,11 @@ export default function Leaderboard({ leaderboard, user }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Referrals Ranking:</div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-cyan)' }}>#47 Globally (12 Refs)</div>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-cyan)' }}>#{myRefRank} Globally ({myRefCount} Refs)</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Earnings Ranking:</div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-gold)' }}>#47 Globally (24.50 TON)</div>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-gold)' }}>#{myEarnRank} Globally ({myEarnAmount.toFixed(2)} TON)</div>
           </div>
         </div>
       </div>

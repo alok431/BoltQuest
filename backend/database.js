@@ -407,6 +407,45 @@ if (process.env.DATABASE_URL) {
         `, s);
       });
 
+      // Seed Mock Referrers & Referrals
+      const referrers = [
+        { id: 1, username: 'aditya_kumar', country: 'Global', referrals: 12, telegramId: '12345', balance: 24.5 },
+        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
+        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
+        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },
+        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 74.0 },
+        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 48.0 }
+      ];
+
+      referrers.forEach((ref) => {
+        db.run(
+          `INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+           VALUES (?, ?, ?, ?, 1, 0, ?, 0, 0, 0)
+           ON CONFLICT (id) DO NOTHING`,
+          [ref.id, ref.telegramId, ref.username, ref.country, ref.balance]
+        );
+
+        for (let i = 1; i <= ref.referrals; i++) {
+          const refId = ref.id * 10000 + i;
+          const refTelegramId = `ref_tg_${ref.username}_${i}`;
+          const refUsername = `${ref.username}_friend_${i}`;
+          
+          db.run(
+            `INSERT INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+             VALUES (?, ?, ?, 'Global', 1, 0, 0.0, 0, 0, 0)
+             ON CONFLICT (id) DO NOTHING`,
+            [refId, refTelegramId, refUsername]
+          );
+
+          db.run(
+            `INSERT INTO referrals (referrer_id, referred_id, status)
+             VALUES (?, ?, 'completed')
+             ON CONFLICT DO NOTHING`,
+            [ref.id, refId]
+          );
+        }
+      });
+
       console.log("Supabase PostgreSQL successfully seeded!");
     });
   }
@@ -743,6 +782,42 @@ if (process.env.DATABASE_URL) {
           INSERT OR IGNORE INTO surveys (id, title, description, reward_amount, reward_points, time_estimate, questions_json)
           VALUES (?, ?, ?, ?, ?, ?, ?)
         `, s);
+      });
+
+      // Seed Mock Referrers & Referrals
+      const referrers = [
+        { id: 1, username: 'aditya_kumar', country: 'Global', referrals: 12, telegramId: '12345', balance: 24.5 },
+        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
+        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
+        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },
+        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 74.0 },
+        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 48.0 }
+      ];
+
+      referrers.forEach((ref) => {
+        db.run(
+          `INSERT OR IGNORE INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+           VALUES (?, ?, ?, ?, 1, 0, ?, 0, 0, 0)`,
+          [ref.id, ref.telegramId, ref.username, ref.country, ref.balance]
+        );
+
+        for (let i = 1; i <= ref.referrals; i++) {
+          const refId = ref.id * 10000 + i;
+          const refTelegramId = `ref_tg_${ref.username}_${i}`;
+          const refUsername = `${ref.username}_friend_${i}`;
+          
+          db.run(
+            `INSERT OR IGNORE INTO users (id, telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
+             VALUES (?, ?, ?, 'Global', 1, 0, 0.0, 0, 0, 0)`,
+            [refId, refTelegramId, refUsername]
+          );
+
+          db.run(
+            `INSERT OR IGNORE INTO referrals (referrer_id, referred_id, status)
+             VALUES (?, ?, 'completed')`,
+            [ref.id, refId]
+          );
+        }
       });
 
       console.log("Local SQLite database successfully seeded!");

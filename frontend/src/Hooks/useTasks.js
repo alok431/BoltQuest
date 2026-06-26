@@ -7,7 +7,7 @@ export function useTasks(userId, refreshUserStats) {
   const [surveys, setSurveys] = useState([]);
   const [loadingSurveys, setLoadingSurveys] = useState(true);
   const [challenges, setChallenges] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState({ earners: [], referrals: [] });
   const [achievements, setAchievements] = useState([]);
 
   const [loadingTasks, setLoadingTasks] = useState(true);

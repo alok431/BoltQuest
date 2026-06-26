@@ -28,6 +28,28 @@ function getLeaderboard() {
   });
 }
 
+function getReferralsLeaderboard() {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT u.id, u.username, u.email as country, COUNT(r.id) as referrals
+      FROM users u
+      LEFT JOIN referrals r ON u.id = r.referrer_id
+      GROUP BY u.id, u.username, u.email
+      ORDER BY referrals DESC, u.username ASC
+    `;
+    db.all(query, [], (err, rows) => {
+      if (err) return reject(err);
+      const formatted = rows.map((r, idx) => ({
+        rank: idx + 1,
+        username: r.username,
+        referrals: r.referrals || 0,
+        country: r.country && r.country.includes('@') ? 'Global' : (r.country || 'Global')
+      }));
+      resolve(formatted);
+    });
+  });
+}
+
 function updateLeaderboardCache() {
   return new Promise((resolve, reject) => {
     // Select all users ordered by balance (earnings) desc
@@ -65,5 +87,6 @@ function updateLeaderboardCache() {
 
 module.exports = {
   getLeaderboard,
+  getReferralsLeaderboard,
   updateLeaderboardCache
 };
