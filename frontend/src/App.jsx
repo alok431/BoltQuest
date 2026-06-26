@@ -144,6 +144,67 @@ export default function App() {
     }
   };
 
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (!isTelegram && !isLocalhost) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at 50% 30%, #17212b 0%, #0e1621 100%)',
+        color: '#ffffff',
+        padding: '24px',
+        textAlign: 'center',
+        fontFamily: 'var(--font-family)'
+      }}>
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'rgba(0, 136, 204, 0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px',
+          border: '2px solid rgba(0, 136, 204, 0.3)',
+          boxShadow: '0 0 20px rgba(0, 136, 204, 0.2)'
+        }}>
+          <span style={{ fontSize: '40px' }}>✈️</span>
+        </div>
+        <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '10px', background: 'linear-gradient(135deg, #0088cc 0%, #00a8ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Telegram Access Only
+        </h2>
+        <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.6', maxWidth: '300px', marginBottom: '28px' }}>
+          BoltQuest is a Telegram Mini App. To play, earn tasks, and manage your wallet, please open it inside the official Telegram application.
+        </p>
+        <a 
+          href="https://t.me/BoltQuest_bot/app" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{
+            padding: '12px 24px',
+            background: 'linear-gradient(135deg, #0088cc 0%, #00a8ff 100%)',
+            border: 'none',
+            borderRadius: '12px',
+            color: '#ffffff',
+            fontWeight: '700',
+            textDecoration: 'none',
+            fontSize: '13px',
+            boxShadow: '0 4px 15px rgba(0, 136, 204, 0.4)',
+            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+          onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          Open in Telegram
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className={`app-container ${theme === 'light' ? 'light-theme' : ''}`}>
       {/* Sticky Header */}
