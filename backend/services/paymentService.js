@@ -32,8 +32,9 @@ function subscribePremium(userId) {
 
           // Award Premium achievement if not already earned
           db.run(`
-            INSERT OR IGNORE INTO user_achievements (user_id, achievement_id)
+            INSERT INTO user_achievements (user_id, achievement_id)
             SELECT ?, id FROM achievements WHERE name = 'Premium Member'
+            ON CONFLICT (user_id, achievement_id) DO NOTHING
           `, [userId]);
 
           resolve({

@@ -30,8 +30,12 @@ function verifyTask(userId, taskId, proofText = '') {
         if (isPremiumTask) {
           // Requires review
           db.run(
-            `INSERT OR REPLACE INTO user_tasks (user_id, task_id, status, proof, completed_at)
-             VALUES (?, ?, 'verifying', ?, CURRENT_TIMESTAMP)`,
+            `INSERT INTO user_tasks (user_id, task_id, status, proof, completed_at)
+             VALUES (?, ?, 'verifying', ?, CURRENT_TIMESTAMP)
+             ON CONFLICT(user_id, task_id) DO UPDATE SET
+               status = EXCLUDED.status,
+               proof = EXCLUDED.proof,
+               completed_at = EXCLUDED.completed_at`,
             [userId, taskId, proofText || 'Screenshot proof submitted'],
             function(updateErr) {
               if (updateErr) return reject(updateErr);
@@ -46,8 +50,12 @@ function verifyTask(userId, taskId, proofText = '') {
         } else {
           // Instant completion for basic/easy tasks
           db.run(
-            `INSERT OR REPLACE INTO user_tasks (user_id, task_id, status, proof, completed_at)
-             VALUES (?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+            `INSERT INTO user_tasks (user_id, task_id, status, proof, completed_at)
+             VALUES (?, ?, 'completed', ?, CURRENT_TIMESTAMP)
+             ON CONFLICT(user_id, task_id) DO UPDATE SET
+               status = EXCLUDED.status,
+               proof = EXCLUDED.proof,
+               completed_at = EXCLUDED.completed_at`,
             [userId, taskId, proofText || 'Instant verification successful'],
             async function(updateErr) {
               if (updateErr) return reject(updateErr);

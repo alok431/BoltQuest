@@ -35,7 +35,7 @@ function updateLeaderboardCache() {
       if (err) return reject(err);
 
       let rank = 1;
-      const stmt = db.prepare('INSERT OR REPLACE INTO leaderboard (user_id, rank, points, earnings, last_updated) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)');
+      const stmt = db.prepare('INSERT INTO leaderboard (user_id, rank, points, earnings, last_updated) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT (user_id) DO UPDATE SET rank = EXCLUDED.rank, points = EXCLUDED.points, earnings = EXCLUDED.earnings, last_updated = CURRENT_TIMESTAMP');
       
       db.serialize(() => {
         users.forEach((user) => {

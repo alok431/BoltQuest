@@ -23,8 +23,15 @@ if (process.env.DATABASE_URL) {
       const pgSql = sql.replace(/\?/g, () => `$${index++}`);
       pool.query(pgSql, params || [], (err, res) => {
         if (callback) {
-          if (err) callback(err);
-          else callback(null, { lastID: res.insertId || (res.rows && res.rows[0] ? res.rows[0].id : null), changes: res.rowCount });
+          if (err) {
+            callback(err);
+          } else {
+            const context = {
+              lastID: res.insertId || (res.rows && res.rows[0] ? res.rows[0].id : null),
+              changes: res.rowCount
+            };
+            callback.call(context, null, context);
+          }
         }
       });
     },
@@ -47,6 +54,29 @@ if (process.env.DATABASE_URL) {
           else callback(null, res.rows);
         }
       });
+    },
+    prepare: (sql) => {
+      const runs = [];
+      return {
+        run: (...params) => {
+          runs.push(new Promise((resolve, reject) => {
+            let cb = null;
+            if (typeof params[params.length - 1] === 'function') {
+              cb = params.pop();
+            }
+            db.run(sql, params, (err, result) => {
+              if (cb) cb(err, result);
+              if (err) reject(err);
+              else resolve(result);
+            });
+          }));
+        },
+        finalize: (callback) => {
+          Promise.all(runs)
+            .then(() => { if (callback) callback(null); })
+            .catch((err) => { if (callback) callback(err); });
+        }
+      };
     },
     serialize: (fn) => fn() // Postgres operates concurrently by default
   };

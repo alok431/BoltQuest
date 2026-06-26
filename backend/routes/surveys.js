@@ -89,7 +89,11 @@ router.post('/complete', (req, res) => {
                   // Trigger mock updates to challenges if applicable (e.g. daily tasks done)
                   db.run(`
                     UPDATE user_challenges
-                    SET current_progress = MIN(current_progress + 1, (SELECT target_count FROM challenges WHERE id = 1))
+                    SET current_progress = CASE 
+                      WHEN current_progress + 1 > (SELECT target_count FROM challenges WHERE id = 1) 
+                      THEN (SELECT target_count FROM challenges WHERE id = 1)
+                      ELSE current_progress + 1 
+                    END
                     WHERE user_id = ? AND challenge_id = 1 AND completed = 0
                   `, [userId]);
 
