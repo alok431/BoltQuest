@@ -91,4 +91,23 @@ router.post('/add-task', (req, res) => {
   );
 });
 
+// GET /api/admin/db-schema (Temporary schema inspector)
+router.get('/db-schema', (req, res) => {
+  db.all(`
+    SELECT table_name, column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_schema = 'public'
+    ORDER BY table_name, ordinal_position;
+  `, [], (err, rows) => {
+    if (err) {
+      db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (sqliteErr, sqliteRows) => {
+        if (sqliteErr) return res.status(500).json({ error: err.message, sqliteError: sqliteErr.message });
+        res.json({ type: 'sqlite', tables: sqliteRows });
+      });
+    } else {
+      res.json({ type: 'postgres', schema: rows });
+    }
+  });
+});
+
 module.exports = router;
