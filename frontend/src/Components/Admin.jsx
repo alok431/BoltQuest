@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Check, X, CreditCard, PlusCircle, Loader2 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
 
 export default function Admin() {
   const [pendingTasks, setPendingTasks] = useState([]);

@@ -3,6 +3,7 @@ import { useAuth } from './Hooks/useAuth';
 import { useUser } from './Hooks/useUser';
 import { useBalance } from './Hooks/useBalance';
 import { useTasks } from './Hooks/useTasks';
+import { API_BASE } from './config';
 import { User, Sun, Moon } from 'lucide-react';
 
 // Components
@@ -56,7 +57,7 @@ export default function App() {
     const webapp = window.Telegram?.WebApp;
     const startParam = webapp?.initDataUnsafe?.start_param;
     if (startParam && userId) {
-      fetch('http://localhost:5000/api/user/referral', {
+      fetch(`${API_BASE}/user/referral`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

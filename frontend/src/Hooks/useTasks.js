@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-
-const API_BASE = 'http://localhost:5000/api';
+import { API_BASE } from '../config';
 
 export function useTasks(userId, refreshUserStats) {
   const [tasks, setTasks] = useState([]);
