@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('../database');
+const { db, initDatabase } = require('../database');
 const { approveTask, rejectTask } = require('../services/taskVerification');
 
 // GET /api/admin/pending-tasks
