@@ -409,7 +409,6 @@ if (process.env.DATABASE_URL) {
 
       // Seed Mock Referrers & Referrals
       const referrers = [
-        { id: 1, username: 'aditya_kumar', country: 'Global', referrals: 12, telegramId: '12345', balance: 24.5 },
         { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
         { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
         { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },
@@ -786,7 +785,6 @@ if (process.env.DATABASE_URL) {
 
       // Seed Mock Referrers & Referrals
       const referrers = [
-        { id: 1, username: 'aditya_kumar', country: 'Global', referrals: 12, telegramId: '12345', balance: 24.5 },
         { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
         { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
         { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },

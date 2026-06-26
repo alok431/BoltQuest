@@ -11,6 +11,7 @@ function getLeaderboard() {
       SELECT l.rank, u.username, u.balance as earnings, u.points, u.email as country
       FROM leaderboard l
       JOIN users u ON l.user_id = u.id
+      WHERE u.username != 'aditya_kumar' AND u.telegram_id != '12345'
       ORDER BY l.rank ASC
     `;
     db.all(query, [], (err, rows) => {
@@ -34,6 +35,7 @@ function getReferralsLeaderboard() {
       SELECT u.id, u.username, u.email as country, COUNT(r.id) as referrals
       FROM users u
       LEFT JOIN referrals r ON u.id = r.referrer_id
+      WHERE u.username != 'aditya_kumar' AND u.telegram_id != '12345'
       GROUP BY u.id, u.username, u.email
       ORDER BY referrals DESC, u.username ASC
     `;
