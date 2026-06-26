@@ -110,4 +110,44 @@ router.get('/db-schema', (req, res) => {
   });
 });
 
+// POST /api/admin/db-reset (Temporary database reset/recreation)
+router.post('/db-reset', (req, res) => {
+  const tables = [
+    'user_ad_views', 'user_promos', 'user_tasks', 'user_surveys', 'user_challenges',
+    'referrals', 'leaderboard', 'transactions', 'tasks', 'surveys', 'user_achievements', 'achievements',
+    'users', 'ads'
+  ];
+  
+  const dropQueries = tables.map(t => `DROP TABLE IF EXISTS ${t} CASCADE;`);
+  let executedCount = 0;
+  let errors = [];
+  
+  function runNextQuery() {
+    if (executedCount < dropQueries.length) {
+      const q = dropQueries[executedCount];
+      db.run(q, [], (err) => {
+        if (err) errors.push({ query: q, error: err.message });
+        executedCount++;
+        runNextQuery();
+      });
+    } else {
+      // Re-initialize tables and seed data
+      try {
+        initDatabase();
+        setTimeout(() => {
+          res.json({
+            success: errors.length === 0,
+            message: 'Database tables dropped, recreated, and seeded successfully.',
+            errors: errors.length > 0 ? errors : null
+          });
+        }, 1000); // Small delay to let initDatabase query executions queue up
+      } catch (initErr) {
+        res.status(500).json({ error: initErr.message, dropErrors: errors });
+      }
+    }
+  }
+  
+  runNextQuery();
+});
+
 module.exports = router;
