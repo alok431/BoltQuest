@@ -245,6 +245,27 @@ if (process.env.DATABASE_URL) {
   };
 
   function seedPostgresData() {
+    // Clean up old mock users from Supabase if they exist
+    db.run("DELETE FROM user_challenges WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM user_achievements WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM user_tasks WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM transactions WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM referrals WHERE referrer_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%') OR referred_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM leaderboard WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM users WHERE telegram_id LIKE 'telegram_%'", function(err) {
+      if (!err) {
+        console.log("Successfully cleaned up old mock users from PostgreSQL database.");
+        // Reset sequences to prevent duplicate key clash
+        db.run("SELECT setval('users_id_seq', COALESCE((SELECT MAX(id) FROM users), 1), false)");
+        db.run("SELECT setval('tasks_id_seq', COALESCE((SELECT MAX(id) FROM tasks), 1), false)");
+        db.run("SELECT setval('challenges_id_seq', COALESCE((SELECT MAX(id) FROM challenges), 1), false)");
+        db.run("SELECT setval('transactions_id_seq', COALESCE((SELECT MAX(id) FROM transactions), 1), false)");
+        db.run("SELECT setval('achievements_id_seq', COALESCE((SELECT MAX(id) FROM achievements), 1), false)");
+        db.run("SELECT setval('referrals_id_seq', COALESCE((SELECT MAX(id) FROM referrals), 1), false)");
+        db.run("SELECT setval('surveys_id_seq', COALESCE((SELECT MAX(id) FROM surveys), 1), false)");
+      }
+    });
+
     db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
       if (err) return console.error(err);
       if (row.count > 0 || (row.rows && row.rows[0] && row.rows[0].count > 0)) {
@@ -577,6 +598,19 @@ if (process.env.DATABASE_URL) {
   };
 
   function seedSQLiteData() {
+    // Clean up old mock users from SQLite if they exist
+    db.run("DELETE FROM user_challenges WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM user_achievements WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM user_tasks WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM transactions WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM referrals WHERE referrer_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%') OR referred_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM leaderboard WHERE user_id IN (SELECT id FROM users WHERE telegram_id LIKE 'telegram_%')");
+    db.run("DELETE FROM users WHERE telegram_id LIKE 'telegram_%'", function(err) {
+      if (!err) {
+        console.log("Successfully cleaned up old mock users from SQLite database.");
+      }
+    });
+
     db.get("SELECT COUNT(*) as count FROM users", (err, row) => {
       if (err) return console.error(err);
       if (row.count > 0) {
@@ -587,22 +621,22 @@ if (process.env.DATABASE_URL) {
       console.log("Seeding initial SQLite data...");
 
       const initialTasks = [
-        ['Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
-        ['Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-        ['Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
-        ['Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
-        ['Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
-        ['Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
-        ['Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
-        ['Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
-        ['Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
-        ['Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
+        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
+        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
+        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
+        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
+        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
+        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
+        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
+        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
+        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
+        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
       ];
 
       initialTasks.forEach(t => {
         db.run(`
-          INSERT INTO tasks (title, description, reward_type, reward_amount, is_premium, category, url)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+          INSERT OR IGNORE INTO tasks (id, title, description, reward_type, reward_amount, is_premium, category, url)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, t);
       });
 
@@ -616,7 +650,7 @@ if (process.env.DATABASE_URL) {
 
       initialChallenges.forEach(c => {
         db.run(`
-          INSERT INTO challenges (id, title, description, type, target_count, reward_amount, reward_points, days_limit)
+          INSERT OR IGNORE INTO challenges (id, title, description, type, target_count, reward_amount, reward_points, days_limit)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, c);
       });
@@ -646,13 +680,14 @@ if (process.env.DATABASE_URL) {
 
       initialAchievements.forEach(a => {
         db.run(`
-          INSERT INTO achievements (id, name, description, badge_icon)
+          INSERT OR IGNORE INTO achievements (id, name, description, badge_icon)
           VALUES (?, ?, ?, ?)
         `, a);
       });
 
       const initialSurveys = [
         [
+          1,
           'Web3 User Survey', 
           'Help us understand your usage of cryptocurrency and web3 miniapps.', 
           1.50, 
@@ -665,6 +700,7 @@ if (process.env.DATABASE_URL) {
           ])
         ],
         [
+          2,
           'Gaming Preferences Poll', 
           'We are building a new TON game. Tell us what you like to play!', 
           0.75, 
@@ -677,6 +713,7 @@ if (process.env.DATABASE_URL) {
           ])
         ],
         [
+          3,
           'VPN Usage Feedback', 
           'Feedback on VPN speeds and privacy setups.', 
           1.00, 
@@ -688,6 +725,7 @@ if (process.env.DATABASE_URL) {
           ])
         ],
         [
+          4,
           'Telegram Features Poll', 
           'Tell us what features you want in our Telegram bot ecosystem.', 
           0.50, 
@@ -702,8 +740,8 @@ if (process.env.DATABASE_URL) {
 
       initialSurveys.forEach(s => {
         db.run(`
-          INSERT INTO surveys (title, description, reward_amount, reward_points, time_estimate, questions_json)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT OR IGNORE INTO surveys (id, title, description, reward_amount, reward_points, time_estimate, questions_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
         `, s);
       });
 
