@@ -84,16 +84,53 @@ router.get('/', (req, res) => {
 });
 
 // POST /api/user/daily-bonus
+const activeDailyBonusClaims = new Set();
+
 router.post('/daily-bonus', (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  if (activeDailyBonusClaims.has(userId)) {
+    return res.status(429).json({ error: 'Claim in progress, please try again.' });
+  }
+  
+  activeDailyBonusClaims.add(userId);
   
   db.get('SELECT balance, login_streak, last_login_date FROM users WHERE id = ?', [userId], (err, user) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (err) {
+      activeDailyBonusClaims.delete(userId);
+      return res.status(500).json({ error: err.message });
+    }
+    if (!user) {
+      activeDailyBonusClaims.delete(userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-    // For interactive testing, increment streak on every claim, wrapping at 7
-    const newStreak = ((user.login_streak || 0) % 7) + 1;
+    // Anti-fraud: Block claiming multiple times on the same calendar day
+    if (user.last_login_date === todayStr) {
+      activeDailyBonusClaims.delete(userId);
+      return res.status(400).json({ error: 'Daily bonus already claimed today' });
+    }
+
+    let newStreak = 1;
+    if (user.last_login_date) {
+      const lastLogin = new Date(user.last_login_date);
+      const d1 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+      const d2 = Date.UTC(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate());
+      const diffDays = Math.floor((d1 - d2) / 86400000);
+
+      if (diffDays === 1) {
+        // Continued streak
+        newStreak = ((user.login_streak || 0) % 7) + 1;
+      } else {
+        // Streak broken or double claim bypass
+        newStreak = 1;
+      }
+    } else {
+      // First daily claim
+      newStreak = 1;
+    }
     
     const rewards = {
       1: 0.50,
@@ -106,12 +143,18 @@ router.post('/daily-bonus', (req, res) => {
     };
     const bonusAmount = rewards[newStreak] || 2.50;
     
-    // Update user balance, login_streak, and last_login_date
+    // Update user balance, login_streak, and last_login_date with condition to block duplicate updates
     db.run(
-      'UPDATE users SET balance = balance + ?, login_streak = ?, last_login_date = ? WHERE id = ?',
-      [bonusAmount, newStreak, todayStr, userId],
+      'UPDATE users SET balance = balance + ?, login_streak = ?, last_login_date = ? WHERE id = ? AND (last_login_date IS NULL OR last_login_date != ?)',
+      [bonusAmount, newStreak, todayStr, userId, todayStr],
       function(updateErr) {
+        activeDailyBonusClaims.delete(userId);
+
         if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+        if (this.changes === 0) {
+          return res.status(400).json({ error: 'Daily bonus already claimed today' });
+        }
 
         // Record transaction
         db.run(

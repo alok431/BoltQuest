@@ -89,101 +89,137 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           gap: '5px', 
           marginBottom: '16px' 
         }}>
-          {[
-            { day: 1, ton: '0.50', points: '50' },
-            { day: 2, ton: '1.00', points: '100' },
-            { day: 3, ton: '1.50', points: '150' },
-            { day: 4, ton: '2.00', points: '200' },
-            { day: 5, ton: '2.50', points: '250' },
-            { day: 6, ton: '3.00', points: '300' },
-            { day: 7, ton: '5.00', points: '500' }
-          ].map((item) => {
-            const currentStreak = user.login_streak || 0;
-            
-            // Determine day status
-            const isClaimed = item.day <= currentStreak;
-            const isActive = item.day === (currentStreak % 7) + 1;
-            const isLocked = item.day > (currentStreak % 7) + 1;
+          {(() => {
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const hasClaimedToday = user.last_login_date === todayStr;
 
-            return (
-              <div 
-                key={item.day}
-                style={{
-                  background: isClaimed 
-                    ? 'rgba(46, 213, 115, 0.12)' 
-                    : isActive 
-                      ? 'rgba(0, 212, 255, 0.12)' 
-                      : 'rgba(255, 255, 255, 0.02)',
-                  border: isClaimed
-                    ? '1px solid rgba(46, 213, 115, 0.3)'
-                    : isActive
-                      ? '1px solid var(--accent-cyan)'
-                      : '1px solid rgba(255, 255, 255, 0.06)',
-                  borderRadius: '10px',
-                  padding: '8px 2px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  boxShadow: isActive ? '0 0 10px rgba(0, 212, 255, 0.2)' : 'none',
-                  transition: 'var(--transition-smooth)'
-                }}
-              >
-                <div style={{ 
-                  fontSize: '9px', 
-                  fontWeight: '700', 
-                  color: isClaimed 
-                    ? 'rgba(46, 213, 115, 0.8)' 
-                    : isActive 
-                      ? 'var(--accent-cyan)' 
-                      : 'var(--text-muted)' 
-                }}>
-                  Day {item.day}
-                </div>
+            let displayStreak = user.login_streak || 0;
+            let isStreakBroken = false;
 
-                <div style={{ fontSize: '12px', margin: '2px 0' }}>
-                  {isClaimed ? '✅' : isActive ? '💎' : '🔒'}
-                </div>
+            if (user.last_login_date) {
+              const lastLogin = new Date(user.last_login_date);
+              const d1 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+              const d2 = Date.UTC(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate());
+              const diffDays = Math.floor((d1 - d2) / 86400000);
+              
+              if (diffDays > 1) {
+                isStreakBroken = true;
+              }
+            } else {
+              isStreakBroken = true;
+            }
 
-                <div style={{ 
-                  fontSize: '8px', 
-                  fontWeight: '600', 
-                  color: '#fff',
-                  lineHeight: '1.2'
-                }}>
-                  +{item.ton}
-                </div>
-                <div style={{ 
-                  fontSize: '7px', 
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  lineHeight: '1'
-                }}>
-                  {item.points} pts
-                </div>
+            return [
+              { day: 1, ton: '0.50', points: '50' },
+              { day: 2, ton: '1.00', points: '100' },
+              { day: 3, ton: '1.50', points: '150' },
+              { day: 4, ton: '2.00', points: '200' },
+              { day: 5, ton: '2.50', points: '250' },
+              { day: 6, ton: '3.00', points: '300' },
+              { day: 7, ton: '5.00', points: '500' }
+            ].map((item) => {
+              // Determine day status
+              let isClaimed = false;
+              let isActive = false;
+              let isLocked = true;
 
-                <div style={{
-                  fontSize: '7px',
-                  fontWeight: '800',
-                  textTransform: 'uppercase',
-                  marginTop: '2px',
-                  padding: '1px 3px',
-                  borderRadius: '3px',
-                  background: isClaimed 
-                    ? 'rgba(46, 213, 115, 0.2)' 
-                    : isActive 
-                      ? 'rgba(0, 212, 255, 0.2)' 
-                      : 'rgba(255, 255, 255, 0.05)',
-                  color: isClaimed 
-                    ? '#2ed573' 
-                    : isActive 
-                      ? 'var(--accent-cyan)' 
-                      : 'var(--text-muted)'
-                }}>
-                  {isClaimed ? 'Claimed' : isActive ? 'Ready' : 'Locked'}
+              if (hasClaimedToday) {
+                isClaimed = item.day <= displayStreak;
+                isActive = false;
+                isLocked = item.day > displayStreak;
+              } else {
+                if (isStreakBroken || displayStreak >= 7) {
+                  isClaimed = false;
+                  isActive = item.day === 1;
+                  isLocked = item.day > 1;
+                } else {
+                  isClaimed = item.day <= displayStreak;
+                  isActive = item.day === displayStreak + 1;
+                  isLocked = item.day > displayStreak + 1;
+                }
+              }
+
+              return (
+                <div 
+                  key={item.day}
+                  style={{
+                    background: isClaimed 
+                      ? 'rgba(46, 213, 115, 0.12)' 
+                      : isActive 
+                        ? 'rgba(0, 212, 255, 0.12)' 
+                        : 'rgba(255, 255, 255, 0.02)',
+                    border: isClaimed
+                      ? '1px solid rgba(46, 213, 115, 0.3)'
+                      : isActive
+                        ? '1px solid var(--accent-cyan)'
+                        : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: '10px',
+                    padding: '8px 2px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: isActive ? '0 0 10px rgba(0, 212, 255, 0.2)' : 'none',
+                    transition: 'var(--transition-smooth)'
+                  }}
+                >
+                  <div style={{ 
+                    fontSize: '9px', 
+                    fontWeight: '700', 
+                    color: isClaimed 
+                      ? 'rgba(46, 213, 115, 0.8)' 
+                      : isActive 
+                        ? 'var(--accent-cyan)' 
+                        : 'var(--text-muted)' 
+                  }}>
+                    Day {item.day}
+                  </div>
+
+                  <div style={{ fontSize: '12px', margin: '2px 0' }}>
+                    {isClaimed ? '✅' : isActive ? '💎' : '🔒'}
+                  </div>
+
+                  <div style={{ 
+                    fontSize: '8px', 
+                    fontWeight: '600', 
+                    color: '#fff',
+                    lineHeight: '1.2'
+                  }}>
+                    +{item.ton}
+                  </div>
+                  <div style={{ 
+                    fontSize: '7px', 
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    lineHeight: '1'
+                  }}>
+                    {item.points} pts
+                  </div>
+
+                  <div style={{
+                    fontSize: '7px',
+                    fontWeight: '800',
+                    textTransform: 'uppercase',
+                    marginTop: '2px',
+                    padding: '1px 3px',
+                    borderRadius: '3px',
+                    background: isClaimed 
+                      ? 'rgba(46, 213, 115, 0.2)' 
+                      : isActive 
+                        ? 'rgba(0, 212, 255, 0.2)' 
+                        : 'rgba(255, 255, 255, 0.05)',
+                    color: isClaimed 
+                      ? '#2ed573' 
+                      : isActive 
+                        ? 'var(--accent-cyan)' 
+                        : 'var(--text-muted)'
+                  }}>
+                    {isClaimed ? 'Claimed' : isActive ? 'Ready' : 'Locked'}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
 
         {claimMessage && (
@@ -192,13 +228,21 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           </div>
         )}
         
-        <button 
-          className="bonus-btn" 
-          onClick={handleClaimBonus}
-          disabled={claiming}
-        >
-          {claiming ? 'Claiming...' : 'Claim Daily Bonus!'}
-        </button>
+        {(() => {
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0];
+          const hasClaimedToday = user.last_login_date === todayStr;
+
+          return (
+            <button 
+              className="bonus-btn" 
+              onClick={handleClaimBonus}
+              disabled={claiming || hasClaimedToday}
+            >
+              {claiming ? 'Claiming...' : hasClaimedToday ? 'Already Claimed Today' : 'Claim Daily Bonus!'}
+            </button>
+          );
+        })()}
       </div>
 
       {/* Hot & Trending Tasks */}

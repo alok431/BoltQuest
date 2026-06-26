@@ -31,7 +31,10 @@ export function useUser(userId) {
           'Content-Type': 'application/json'
         }
       });
-      if (!res.ok) throw new Error('Failed to claim daily bonus');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to claim daily bonus');
+      }
       const data = await res.json();
       // Refresh user stats
       await fetchUser();
