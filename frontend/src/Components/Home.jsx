@@ -256,11 +256,11 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
       <div className="grid-2">
         <div className="stat-card">
           <div className="stat-label">Tasks Done</div>
-          <div className="stat-value">5</div>
+          <div className="stat-value">{user.stats?.todayTasksCompleted || 0}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Earnings</div>
-          <div className="stat-value">{(user.balance * 0.15).toFixed(2)} TON</div>
+          <div className="stat-value">{user.stats?.todayEarned?.toFixed(2) || '0.00'} TON</div>
         </div>
       </div>
 
@@ -304,22 +304,22 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
         </div>
       </div>
 
-      {/* Stats This Month */}
+      {/* Stats Overview */}
       <div className="section-title">
-        <TrendingUp size={12} /> Stats This Month
+        <TrendingUp size={12} /> Stats Overview
       </div>
       <div className="card">
         <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', marginBottom: '8px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Tasks Completed</span>
-          <span style={{ color: '#00d4ff', fontWeight: '700' }}>42</span>
+          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.tasksCompleted || 0}</span>
         </div>
         <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', marginBottom: '8px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Total Earned</span>
-          <span style={{ color: '#00d4ff', fontWeight: '700' }}>127.50 TON</span>
+          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.totalEarned?.toFixed(2) || '0.00'} TON</span>
         </div>
         <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Points Gained</span>
-          <span style={{ color: '#00d4ff', fontWeight: '700' }}>12,420</span>
+          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.points?.toLocaleString() || 0}</span>
         </div>
       </div>
     </div>

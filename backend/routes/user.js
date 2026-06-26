@@ -54,7 +54,32 @@ router.get('/', (req, res) => {
   db.get('SELECT * FROM users WHERE id = ?', [userId], (err, user) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
+
+    const todayStart = new Date().toISOString().split('T')[0] + ' 00:00:00';
+
+    db.get('SELECT COUNT(*) as count FROM user_tasks WHERE user_id = ? AND status = \'completed\'', [userId], (err1, tasksRow) => {
+      db.get('SELECT COUNT(*) as count FROM referrals WHERE referrer_id = ?', [userId], (err2, refRow) => {
+        db.get('SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND amount > 0', [userId], (err3, earnRow) => {
+          db.get('SELECT COUNT(*) as count FROM user_tasks WHERE user_id = ? AND status = \'completed\' AND completed_at >= ?', [userId, todayStart], (err4, todayRow) => {
+            db.get('SELECT SUM(amount) as total FROM transactions WHERE user_id = ? AND amount > 0 AND created_at >= ?', [userId, todayStart], (err5, todayEarnRow) => {
+              
+              const stats = {
+                tasksCompleted: tasksRow?.count || 0,
+                referralsCount: refRow?.count || 0,
+                totalEarned: earnRow?.total || 0.0,
+                todayTasksCompleted: todayRow?.count || 0,
+                todayEarned: todayEarnRow?.total || 0.0
+              };
+
+              res.json({
+                ...user,
+                stats
+              });
+            });
+          });
+        });
+      });
+    });
   });
 });
 

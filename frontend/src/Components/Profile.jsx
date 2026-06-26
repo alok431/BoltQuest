@@ -3,8 +3,15 @@ import { User, Settings, Shield, Moon, Mail, Edit3, Loader2, Users, Copy, Share2
 
 export default function Profile({ user, updateSettings, theme, setTheme, tgUser }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState(user?.username || 'Aditya Kumar');
-  const [email, setEmail] = useState(user?.email || 'aditya@email.com');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+
+  React.useEffect(() => {
+    if (user) {
+      setUsername(user.username || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
@@ -132,19 +139,19 @@ export default function Profile({ user, updateSettings, theme, setTheme, tgUser 
       <div className="grid-2">
         <div className="stat-card">
           <div className="stat-label">Total Earned</div>
-          <div className="stat-value">745 TON</div>
+          <div className="stat-value">{user.stats?.totalEarned?.toFixed(2) || '0.00'} TON</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Tasks Done</div>
-          <div className="stat-value">268</div>
+          <div className="stat-value">{user.stats?.tasksCompleted || 0}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Referrals</div>
-          <div className="stat-value">12</div>
+          <div className="stat-value">{user.stats?.referralsCount || 0}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">XP Points</div>
-          <div className="stat-value">{(user.xp / 1000).toFixed(1)}K</div>
+          <div className="stat-value">{user.xp || 0}</div>
         </div>
       </div>
 

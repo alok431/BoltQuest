@@ -120,6 +120,7 @@ export default function App() {
             transactions={transactions} 
             requestWithdrawal={requestWithdrawal} 
             refreshUser={refreshUser}
+            tgUser={tgUser}
           />
         );
       case 'profile':

@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
 import { CreditCard, DollarSign, ArrowDownRight, ArrowUpRight, Loader2 } from 'lucide-react';
 
-export default function Wallet({ user, transactions, requestWithdrawal, refreshUser }) {
+export default function Wallet({ user, transactions, requestWithdrawal, refreshUser, tgUser }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('TON Wallet');
   const [withdrawing, setWithdrawing] = useState(false);
   const [msg, setMsg] = useState('');
   const [isEditingPayment, setIsEditingPayment] = useState(null); // 'noncustodial' or 'custodial'
   
-  const [nonCustodialAddress, setNonCustodialAddress] = useState('UQDxTONWalletAddressAdityaKumar123456789...');
-  const [custodialAddress, setCustodialAddress] = useState('@aditya_wallet');
-  const [walletConnected, setWalletConnected] = useState(true);
+  const [nonCustodialAddress, setNonCustodialAddress] = useState('No Wallet Connected');
+  const [custodialAddress, setCustodialAddress] = useState('No Username Connected');
+  const [walletConnected, setWalletConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+
+  React.useEffect(() => {
+    if (tgUser?.username) {
+      setCustodialAddress(`@${tgUser.username}`);
+    }
+  }, [tgUser]);
 
   const handleConnectWallet = () => {
     setConnecting(true);
     setTimeout(() => {
       setWalletConnected(true);
-      setNonCustodialAddress('UQDxTONWalletAddressAdityaKumar123456789...');
+      const randomHex = Array.from({ length: 42 }, () => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 62)]).join('');
+      setNonCustodialAddress(`UQ${randomHex}`);
       setConnecting(false);
     }, 1200);
   };
