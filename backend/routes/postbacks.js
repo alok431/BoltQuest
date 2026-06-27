@@ -133,9 +133,18 @@ router.get('/ayet', (req, res) => {
     return res.status(403).send('Missing security hash header');
   }
 
-  const rewardAmount = parseFloat(amount);
+  let rewardAmount = parseFloat(amount);
+  let isReversal = txn_id.startsWith('r-');
+  let txType = 'task_earning';
+  let txDetails = `Ayet Offerwall: ${offer_name || 'Offer completed'}`;
 
-  // Credit user balance in SQLite / Postgres
+  if (isReversal) {
+    rewardAmount = -rewardAmount; // Deduct balance and points for chargeback
+    txType = 'task_reversal';
+    txDetails = `Ayet Reversal: ${offer_name || 'Offer charged back'}`;
+  }
+
+  // Credit or deduct user balance in SQLite / Postgres
   db.run(
     'UPDATE users SET balance = balance + ?, points = points + ? WHERE id = ?',
     [rewardAmount, Math.round(rewardAmount * 100), user_id],
@@ -145,8 +154,8 @@ router.get('/ayet', (req, res) => {
       // Record transaction
       db.run(
         `INSERT INTO transactions (user_id, type, amount, points, status, details)
-         VALUES (?, 'task_earning', ?, ?, 'completed', ?)`,
-        [user_id, rewardAmount, Math.round(rewardAmount * 100), `Ayet Offerwall: ${offer_name || 'Offer completed'}`]
+         VALUES (?, ?, ?, ?, 'completed', ?)`,
+        [user_id, txType, rewardAmount, Math.round(rewardAmount * 100), txDetails]
       );
 
       // ayeT-Studios requires a 200 OK response to acknowledge receipt
