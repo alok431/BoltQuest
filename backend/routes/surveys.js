@@ -5,6 +5,23 @@ const { addXP } = require('../services/levelingService');
 
 const DEFAULT_USER_ID = 1;
 
+// GET /api/surveys/cpx-url
+router.get('/cpx-url', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const appId = process.env.CPX_APP_ID || 'your_cpx_app_id_here';
+  const secretKey = process.env.CPX_SECRET_KEY || 'your_cpx_secret_key_here';
+  
+  const crypto = require('crypto');
+  const hash = crypto
+    .createHash('md5')
+    .update(`${userId}-${secretKey}`)
+    .digest('hex');
+    
+  const cpxUrl = `https://offers.cpx-research.com/index.php?app_id=${appId}&ext_user_id=${userId}&secure_hash=${hash}`;
+  
+  res.json({ url: cpxUrl });
+});
+
 // GET /api/surveys
 router.get('/', (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;

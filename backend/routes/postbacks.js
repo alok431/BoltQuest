@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { db } = require('../database');
+const { addXP } = require('../services/levelingService');
 
 // Replace these with your actual App Secrets from the publisher panels
 const TOROX_SECRET_KEY = process.env.TOROX_SECRET_KEY || 'your_torox_secret_key_here';
 const NOTIK_SECRET_KEY = process.env.NOTIK_SECRET_KEY || 'your_notik_secret_key_here';
 const AYET_API_KEY = process.env.AYET_API_KEY || 'your_ayet_api_key_here';
+const CPX_SECRET_KEY = process.env.CPX_SECRET_KEY || 'your_cpx_secret_key_here';
 
 /**
  * 1. TOROX POSTBACK WEBHOOK
@@ -162,6 +164,95 @@ router.get('/ayet', (req, res) => {
       res.status(200).send('OK');
     }
   );
+});
+
+/**
+ * 4. CPX RESEARCH POSTBACK WEBHOOK
+ * CPX Research sends GET requests. Example parameters:
+ * /api/postback/cpx?trans_id=123&user_id=1&amount=0.50&status=1&hash=HASH
+ */
+router.get('/cpx', (req, res) => {
+  const { trans_id, user_id, amount, status, hash } = req.query;
+
+  if (!user_id || !amount || !hash || !trans_id) {
+    return res.status(400).send('Missing required parameters');
+  }
+
+  // Verify Signature to prevent user spoofing
+  // CPX signature formula: md5(trans_id + '-' + user_id + '-' + amount + '-' + secret_key)
+  const computedHash = crypto
+    .createHash('md5')
+    .update(`${trans_id}-${user_id}-${amount}-${CPX_SECRET_KEY}`)
+    .digest('hex');
+
+  if (hash !== computedHash && CPX_SECRET_KEY !== 'your_cpx_secret_key_here') {
+    return res.status(403).send('Invalid signature');
+  }
+
+  let rewardAmount = parseFloat(amount);
+  let rewardPoints = Math.round(rewardAmount * 100);
+  let xpGained = 60; // 60 XP for surveys
+  const isReversal = status === '2' || String(status) === '2';
+
+  if (isReversal) {
+    rewardAmount = -rewardAmount;
+    rewardPoints = -rewardPoints;
+    xpGained = -xpGained;
+  }
+
+  // Fetch user details to apply Premium double booster
+  db.get('SELECT premium_status FROM users WHERE id = ?', [user_id], (uErr, user) => {
+    if (uErr) return res.status(500).send(uErr.message);
+
+    // If completed (not reversal) and user has premium, double rewards
+    if (!isReversal && user && user.premium_status === 1) {
+      rewardAmount *= 2;
+      rewardPoints *= 2;
+      xpGained *= 2;
+    }
+
+    const txType = isReversal ? 'survey_reversal' : 'survey_earning';
+    let txDetails = isReversal
+      ? `CPX Research Survey Chargeback (ID: ${trans_id})`
+      : `CPX Research Survey Completed (ID: ${trans_id})`;
+
+    if (!isReversal && user && user.premium_status === 1) {
+      txDetails += ' (2x Premium Booster)';
+    }
+
+    // Update user balance and points in SQLite
+    db.run(
+      'UPDATE users SET balance = balance + ?, points = points + ? WHERE id = ?',
+      [rewardAmount, rewardPoints, user_id],
+      async function(updateErr) {
+        if (updateErr) return res.status(500).send(updateErr.message);
+
+        try {
+          if (!isReversal) {
+            await addXP(user_id, xpGained);
+          }
+
+          // Record transaction log
+          db.run(
+            `INSERT INTO transactions (user_id, type, amount, points, status, details)
+             VALUES (?, ?, ?, ?, 'completed', ?)`,
+            [user_id, txType, rewardAmount, rewardPoints, txDetails]
+          );
+
+          res.send('1');
+        } catch (xpErr) {
+          console.error('Error adding XP in CPX webhook:', xpErr);
+          // Record transaction log and send success anyway to avoid repeat retries
+          db.run(
+            `INSERT INTO transactions (user_id, type, amount, points, status, details)
+             VALUES (?, ?, ?, ?, 'completed', ?)`,
+            [user_id, txType, rewardAmount, rewardPoints, txDetails]
+          );
+          res.send('1');
+        }
+      }
+    );
+  });
 });
 
 module.exports = router;

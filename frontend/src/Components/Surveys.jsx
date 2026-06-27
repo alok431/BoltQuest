@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ClipboardList, Clock, Gift, Sparkles, Loader2, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ClipboardList, Clock, Gift, Sparkles, Loader2, Check, HelpCircle } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function Surveys({ surveys, completeSurvey, user }) {
   const [activeSurvey, setActiveSurvey] = useState(null);
@@ -7,6 +8,38 @@ export default function Surveys({ surveys, completeSurvey, user }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [successInfo, setSuccessInfo] = useState(null);
+
+  // CPX Research integration state
+  const [subTab, setSubTab] = useState('daily');
+  const [cpxUrl, setCpxUrl] = useState('');
+  const [loadingCpx, setLoadingCpx] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+
+  useEffect(() => {
+    if (subTab === 'cpx' && !cpxUrl && user?.id) {
+      setLoadingCpx(true);
+      setFetchError(null);
+      setIframeLoading(true);
+      fetch(`${API_BASE}/surveys/cpx-url?userId=${user.id}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to generate survey URL');
+          return res.json();
+        })
+        .then(data => {
+          if (data.url) {
+            setCpxUrl(data.url);
+          } else {
+            throw new Error('No URL returned from server');
+          }
+        })
+        .catch(err => {
+          console.error("Error fetching CPX url:", err);
+          setFetchError(err.message || 'Error connecting to CPX Research server');
+        })
+        .finally(() => setLoadingCpx(false));
+    }
+  }, [subTab, cpxUrl, user?.id]);
 
   const handleStartSurvey = (survey) => {
     setActiveSurvey(survey);
@@ -177,56 +210,198 @@ export default function Surveys({ surveys, completeSurvey, user }) {
           </div>
         </div>
       ) : (
-        /* Surveys List */
+        /* Surveys List with Sub-Navigation Tabs */
         <>
-          <div className="section-title">
-            <ClipboardList size={12} /> Available Surveys
+          <div className="tab-navigation" style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+            <button 
+              className={`tab-btn ${subTab === 'daily' ? 'active' : ''}`}
+              onClick={() => setSubTab('daily')}
+              style={{ flex: 1, padding: '10px' }}
+            >
+              📋 Daily Surveys
+            </button>
+            <button 
+              className={`tab-btn ${subTab === 'cpx' ? 'active' : ''}`}
+              onClick={() => setSubTab('cpx')}
+              style={{ flex: 1, padding: '10px' }}
+            >
+              ⚡ CPX Research
+            </button>
           </div>
 
-          {surveys.map(survey => {
-            const isCompleted = survey.completed === 1;
+          {subTab === 'daily' ? (
+            <>
+              <div className="section-title">
+                <ClipboardList size={12} /> Available Surveys
+              </div>
 
-            return (
-              <div className="card" key={survey.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                  <div style={{ flex: '1' }}>
-                    <div className="task-title" style={{ fontSize: '13px', fontWeight: '700' }}>
-                      {survey.title}
+              {surveys.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px', fontSize: '12px' }}>
+                  No daily surveys available right now.
+                </div>
+              ) : (
+                surveys.map(survey => {
+                  const isCompleted = survey.completed === 1;
+
+                  return (
+                    <div className="card" key={survey.id}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                        <div style={{ flex: '1' }}>
+                          <div className="task-title" style={{ fontSize: '13px', fontWeight: '700' }}>
+                            {survey.title}
+                          </div>
+                          <div className="task-desc" style={{ fontSize: '11px', marginTop: '2px' }}>
+                            {survey.description}
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={12} /> {survey.time_estimate} min
+                            </span>
+                            <span>•</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
+                              <Gift size={12} /> +{survey.reward_amount.toFixed(2)} TON 
+                              {user?.premium_status === 1 && ' (2x Booster)'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          {isCompleted ? (
+                            <button className="start-btn completed-btn" disabled>
+                              <Check size={12} style={{ marginRight: '4px' }} /> Done
+                            </button>
+                          ) : (
+                            <button 
+                              className="start-btn" 
+                              onClick={() => handleStartSurvey(survey)}
+                            >
+                              Start
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="task-desc" style={{ fontSize: '11px', marginTop: '2px' }}>
-                      {survey.description}
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={12} /> {survey.time_estimate} min
-                      </span>
-                      <span>•</span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
-                        <Gift size={12} /> +{survey.reward_amount.toFixed(2)} TON 
-                        {user?.premium_status === 1 && ' (2x Booster)'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    {isCompleted ? (
-                      <button className="start-btn completed-btn" disabled>
-                        <Check size={12} style={{ marginRight: '4px' }} /> Done
-                      </button>
-                    ) : (
-                      <button 
-                        className="start-btn" 
-                        onClick={() => handleStartSurvey(survey)}
-                      >
-                        Start
-                      </button>
-                    )}
-                  </div>
+                  );
+                })
+              )}
+            </>
+          ) : (
+            /* CPX Surveys Iframe Content */
+            <div className="tab-content-fade">
+              <div className="section-title">
+                <Sparkles size={12} /> CPX Survey Wall
+              </div>
+
+              {/* Informative Tips Box */}
+              <div style={{
+                background: 'rgba(0, 212, 255, 0.04)',
+                border: '1px solid rgba(0, 212, 255, 0.15)',
+                borderRadius: '12px',
+                padding: '12px',
+                marginBottom: '16px',
+                fontSize: '11px',
+                color: 'var(--text-secondary)',
+                lineHeight: '1.5'
+              }}>
+                <div style={{ fontWeight: '700', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                  <HelpCircle size={14} /> How it works
+                </div>
+                Complete third-party surveys matching your demographic to earn points and TON rewards instantly. 
+                {user?.premium_status === 1 ? (
+                  <strong style={{ color: 'var(--accent-gold)', marginLeft: '4px' }}>
+                    🔥 Your 2x Premium Booster is active!
+                  </strong>
+                ) : (
+                  <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>
+                    (Upgrade to Premium to get 2x rewards)
+                  </span>
+                )}
+                <div style={{ marginTop: '4px', fontSize: '10px', color: 'var(--accent-red)' }}>
+                  ⚠️ Disqualifications or screen-outs may occur if you don't match the target demographic.
                 </div>
               </div>
-            );
-          })}
+
+              {loadingCpx && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '10px' }}>
+                  <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-cyan)' }} />
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Generating secure CPX portal link...</span>
+                </div>
+              )}
+
+              {fetchError && (
+                <div style={{ 
+                  padding: '20px', 
+                  color: 'var(--accent-red)', 
+                  textAlign: 'center', 
+                  background: 'rgba(255, 71, 87, 0.08)', 
+                  border: '1px solid rgba(255, 71, 87, 0.15)', 
+                  borderRadius: '12px',
+                  fontSize: '12px'
+                }}>
+                  <p>{fetchError}</p>
+                  <button 
+                    className="btn-secondary" 
+                    style={{ marginTop: '10px', fontSize: '11px', padding: '6px 12px' }}
+                    onClick={() => {
+                      setCpxUrl('');
+                      // Force reload state
+                      setSubTab('daily');
+                      setTimeout(() => setSubTab('cpx'), 100);
+                    }}
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {cpxUrl && (
+                <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden' }}>
+                  {iframeLoading && (
+                    <div style={{ 
+                      position: 'absolute', 
+                      top: 0, 
+                      left: 0, 
+                      width: '100%', 
+                      height: '550px', 
+                      background: 'var(--bg-secondary)', 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '10px',
+                      zIndex: 1
+                    }}>
+                      <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-cyan)' }} />
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Loading Survey Wall...</span>
+                    </div>
+                  )}
+                  <div style={{ 
+                    width: '100%', 
+                    height: '550px', 
+                    overflow: 'auto', 
+                    WebkitOverflowScrolling: 'touch',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    background: 'var(--bg-secondary)',
+                    boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)'
+                  }}>
+                    <iframe
+                      src={cpxUrl}
+                      title="CPX Research Surveys"
+                      onLoad={() => setIframeLoading(false)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        display: 'block'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
