@@ -265,7 +265,141 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
         })()}
       </div>
 
+      {/* ⚡ SUPER CHARGED TASKS (CPA / Affiliate High-Yield Section) */}
+      <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ffb300' }}>
+        <Sparkles size={12} color="#ffb300" /> ⚡ SUPER CHARGED TASKS
+      </div>
+      
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        marginBottom: '16px'
+      }}>
+        {/* CPA Card 1: Binance KYC */}
+        <div className="card" style={{
+          background: 'linear-gradient(135deg, rgba(255, 179, 0, 0.08) 0%, rgba(255, 71, 87, 0.03) 100%)',
+          border: '1px solid rgba(255, 179, 0, 0.2)',
+          boxShadow: '0 0 15px rgba(255, 179, 0, 0.03)',
+          padding: '16px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Badge */}
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            background: 'linear-gradient(90deg, #ffb300, #ff4757)',
+            color: '#000',
+            fontSize: '8px',
+            fontWeight: '900',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            HIGH YIELD
+          </div>
 
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🪙 Binance KYC Verification
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '8px' }}>
+                Register via BoltQuest link, verify identity (KYC), and trade $10.
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <span style={{ color: '#ffd700', fontSize: '11px', fontWeight: '800' }}>+85,000 Coins (~50 TON)</span>
+              </div>
+            </div>
+            
+            <button 
+              className="btn-primary" 
+              style={{
+                background: 'linear-gradient(135deg, #ffb300 0%, #ff8000 100%)',
+                color: '#000',
+                border: 'none',
+                padding: '8px 12px',
+                fontSize: '10px',
+                fontWeight: '800',
+                borderRadius: '8px',
+                alignSelf: 'center',
+                boxShadow: '0 4px 10px rgba(255, 179, 0, 0.25)',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => {
+                window.open('https://binance.com', '_blank');
+              }}
+            >
+              Start Offer
+            </button>
+          </div>
+        </div>
+
+        {/* CPA Card 2: Tonkeeper Wallet */}
+        <div className="card" style={{
+          background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 136, 204, 0.03) 100%)',
+          border: '1px solid rgba(0, 212, 255, 0.2)',
+          boxShadow: '0 0 15px rgba(0, 212, 255, 0.03)',
+          padding: '16px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Badge */}
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            background: 'linear-gradient(90deg, #00d4ff, #0088cc)',
+            color: '#000',
+            fontSize: '8px',
+            fontWeight: '900',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            HOT CPA
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#fff', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                💎 Tonkeeper Wallet Promo
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', lineHeight: '1.4', marginBottom: '8px' }}>
+                Create a new Tonkeeper wallet, buy and hold at least 5 TON.
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <span style={{ color: '#00d4ff', fontSize: '11px', fontWeight: '800' }}>+34,000 Coins (~20 TON)</span>
+              </div>
+            </div>
+            
+            <button 
+              className="btn-primary" 
+              style={{
+                background: 'linear-gradient(135deg, #00d4ff 0%, #0088cc 100%)',
+                color: '#000',
+                border: 'none',
+                padding: '8px 12px',
+                fontSize: '10px',
+                fontWeight: '800',
+                borderRadius: '8px',
+                alignSelf: 'center',
+                boxShadow: '0 4px 10px rgba(0, 212, 255, 0.25)',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => {
+                window.open('https://tonkeeper.com', '_blank');
+              }}
+            >
+              Start Offer
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Hot & Trending Tasks */}
       <div className="section-title">
