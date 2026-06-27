@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Play, Check, Loader2, Sparkles } from 'lucide-react';
 
+const AYET_ADSLOT_ID = 'ayet_adslot_id_placeholder'; // Replace with your actual ayeT-Studios Adslot ID from the publisher dashboard
+
 export default function Tasks({ tasks, completeTask, user }) {
   const [loadingTaskId, setLoadingTaskId] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
@@ -62,10 +64,10 @@ export default function Tasks({ tasks, completeTask, user }) {
 
       {/* Offerwall Partners Grid */}
       <div className="section-title">🔌 Offerwall Partners</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))', gap: '8px', marginBottom: '16px' }}>
         {/* Torox Card */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '12px', border: '1px solid rgba(0, 212, 255, 0.15)', margin: 0 }}>
-          <div style={{ fontSize: '24px', marginBottom: '4px' }}>🛡️</div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px', border: '1px solid rgba(0, 212, 255, 0.15)', margin: 0 }}>
+          <div style={{ fontSize: '20px', marginBottom: '4px' }}>🛡️</div>
           <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-primary)' }}>Torox Wall</div>
           <div style={{ fontSize: '8px', color: 'var(--text-secondary)', margin: '4px 0 8px 0', minHeight: '30px' }}>
             Install apps & complete high-paying offers.
@@ -79,9 +81,25 @@ export default function Tasks({ tasks, completeTask, user }) {
           </button>
         </div>
 
+        {/* ayeT-Studios Card */}
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px', border: '1px solid rgba(255, 71, 87, 0.15)', margin: 0 }}>
+          <div style={{ fontSize: '20px', marginBottom: '4px' }}>🎯</div>
+          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-primary)' }}>ayeT Studios</div>
+          <div style={{ fontSize: '8px', color: 'var(--text-secondary)', margin: '4px 0 8px 0', minHeight: '30px' }}>
+            Complete game tasks & earn high payouts.
+          </div>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', padding: '6px', fontSize: '10px', background: 'var(--grad-premium)', color: '#fff', fontWeight: '700' }}
+            onClick={() => window.open(`https://www.ayetstudios.com/offers/web_offerwall/${AYET_ADSLOT_ID}?external_identifier=${user?.id || 1}`, '_blank')}
+          >
+            Open ayeT
+          </button>
+        </div>
+
         {/* Notik.me Card */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '12px', border: '1px solid rgba(255, 215, 0, 0.15)', margin: 0 }}>
-          <div style={{ fontSize: '24px', marginBottom: '4px' }}>📈</div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px', border: '1px solid rgba(255, 215, 0, 0.15)', margin: 0 }}>
+          <div style={{ fontSize: '20px', marginBottom: '4px' }}>📈</div>
           <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-primary)' }}>Notik Offerwall</div>
           <div style={{ fontSize: '8px', color: 'var(--text-secondary)', margin: '4px 0 8px 0', minHeight: '30px' }}>
             Answer quick quiz polls & claim payouts.
