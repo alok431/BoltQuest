@@ -3,6 +3,14 @@ import { CreditCard, DollarSign, ArrowDownRight, ArrowUpRight, Loader2, ShieldAl
 import { API_BASE } from '../config';
 
 export default function Wallet({ user, transactions, requestWithdrawal, refreshUser, tgUser }) {
+  const referrals = user?.stats?.referralsCount || 0;
+  let feePercentage = 40;
+  if (referrals >= 5) {
+    feePercentage = 20;
+  } else if (referrals >= 1) {
+    feePercentage = 30;
+  }
+
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('TON Wallet');
   const [withdrawing, setWithdrawing] = useState(false);
@@ -132,7 +140,11 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
     try {
       const activeAddress = method === 'TON Wallet' ? user.ton_wallet : custodialAddress;
       const result = await requestWithdrawal(withdrawCoins, method, activeAddress);
-      setMsg(`🎉 Withdrawal of ${withdrawCoins} Coins (${tonAmt.toFixed(4)} TON) requested successfully!`);
+      
+      const actualNet = result.netTon || (tonAmt * (1 - feePercentage / 100));
+      const actualFeePercent = result.feePercent || feePercentage;
+
+      setMsg(`🎉 Withdrawal requested! Coins: ${withdrawCoins.toLocaleString()} → Net Payout: ${actualNet.toFixed(4)} TON (Fee: ${actualFeePercent}%).`);
       setAmount('');
       if (refreshUser) refreshUser();
     } catch (err) {
@@ -310,19 +322,53 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
         )}
 
         <form onSubmit={handleWithdraw}>
+          {/* Dynamic Fee Tiers Explanation */}
+          <div style={{
+            fontSize: '10px',
+            color: 'var(--text-secondary)',
+            marginBottom: '10px',
+            padding: '8px 10px',
+            background: 'var(--bg-secondary)',
+            borderRadius: '8px',
+            border: '1px solid var(--border-color)',
+            lineHeight: '1.4'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span>Your Referrals: <strong style={{ color: 'var(--accent-cyan)' }}>{referrals}</strong></span>
+              <span style={{ color: '#ffd700' }}>Current Fee Rate: <strong>{feePercentage}%</strong></span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: 'var(--text-muted)', borderTop: '1px dashed var(--border-color)', paddingTop: '4px', marginTop: '4px' }}>
+              <span>0 refs: <strong>40% fee</strong></span>
+              <span>1+ refs: <strong>30% fee</strong></span>
+              <span>5+ refs: <strong>20% fee</strong></span>
+            </div>
+          </div>
+
           <div style={{
             fontSize: '11px',
             color: 'var(--accent-cyan)',
             marginBottom: '10px',
-            padding: '6px 10px',
+            padding: '8px 10px',
             background: 'rgba(0, 212, 255, 0.05)',
             borderRadius: '8px',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            flexDirection: 'column',
+            gap: '4px'
           }}>
-            <span>Rate: 1700 Coins = 1 TON</span>
-            <strong>Payout: {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Rate: 1700 Coins = 1 TON</span>
+              <span>Gross: {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)' }}>
+              <span>Fee ({feePercentage}%):</span>
+              <span>-{amount && parseInt(amount, 10) > 0 ? ((parseInt(amount, 10) / 1700) * (feePercentage / 100)).toFixed(4) : '0.0000'} TON</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(0, 212, 255, 0.2)', paddingTop: '4px', marginTop: '2px' }}>
+              <span style={{ fontWeight: 'bold' }}>Net Received:</span>
+              <strong style={{ color: '#2ed573' }}>
+                {amount && parseInt(amount, 10) > 0 ? ((parseInt(amount, 10) / 1700) * (1 - feePercentage / 100)).toFixed(4) : '0.0000'} TON
+              </strong>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
@@ -343,17 +389,19 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
               background: 'var(--bg-secondary)', 
               border: '1px solid var(--border-color)', 
               borderRadius: '12px',
-              color: 'var(--accent-cyan)',
-              fontSize: '11px',
+              color: '#2ed573',
+              fontSize: '10px',
               fontWeight: '700',
               textAlign: 'center',
               whiteSpace: 'nowrap',
               height: '42px',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              ≈ {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON
+              <span style={{ fontSize: '8px', color: 'var(--text-secondary)' }}>Net Payout</span>
+              <span>{amount && parseInt(amount, 10) > 0 ? ((parseInt(amount, 10) / 1700) * (1 - feePercentage / 100)).toFixed(4) : '0.0000'} TON</span>
             </div>
             <div style={{ flex: '1.5' }}>
               <select 

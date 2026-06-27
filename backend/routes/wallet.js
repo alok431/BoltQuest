@@ -36,48 +36,61 @@ router.post('/withdraw', (req, res) => {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
 
-    // Conversion rate: 1000 coins = 100 INR, 170 INR = 1 TON.
-    // 1 coin = 0.1 INR.
-    // TON = (coins * 0.1) / 170 = coins / 1700.
-    const tonPayout = withdrawCoins / 1700.0;
-    
-    if (tonPayout < 5.0) {
-      return res.status(400).json({ error: 'Minimum withdrawal is 5 TON (8,500 Coins)' });
-    }
+    db.get('SELECT COUNT(*) as count FROM referrals WHERE referrer_id = ?', [userId], (errRef, refRow) => {
+      if (errRef) return res.status(500).json({ error: errRef.message });
+      const refCount = refRow?.count || 0;
 
-    const serviceFee = tonPayout * 0.05;
-    const netPayout = tonPayout - serviceFee;
+      let feePercent = 0.40;
+      if (refCount >= 5) {
+        feePercent = 0.20;
+      } else if (refCount >= 1) {
+        feePercent = 0.30;
+      }
 
-    // Deduct balance and insert transaction
-    db.serialize(() => {
-      db.run(
-        'UPDATE users SET balance = balance - ? WHERE id = ?',
-        [withdrawCoins, userId],
-        function(updateErr) {
-          if (updateErr) return res.status(500).json({ error: updateErr.message });
+      // Conversion rate: 1000 coins = 100 INR, 170 INR = 1 TON.
+      // 1 coin = 0.1 INR.
+      // TON = (coins * 0.1) / 170 = coins / 1700.
+      const tonPayout = withdrawCoins / 1700.0;
+      
+      if (tonPayout < 5.0) {
+        return res.status(400).json({ error: 'Minimum withdrawal is 5 TON (8,500 Coins)' });
+      }
 
-          const details = `Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Fee: ${serviceFee.toFixed(4)} TON. Net: ${netPayout.toFixed(4)} TON. ${method || 'TON Wallet'} Payout to ${req.body.address || 'UQDxTONWallet...'}`;
-          
-          db.run(
-            `INSERT INTO transactions (user_id, type, amount, points, status, details)
-             VALUES (?, 'withdrawal', ?, 0, 'completed', ?)`,
-            [userId, -tonPayout, details],
-            function(insertErr) {
-              if (insertErr) return res.status(500).json({ error: insertErr.message });
+      const serviceFee = tonPayout * feePercent;
+      const netPayout = tonPayout - serviceFee;
 
-              res.json({
-                success: true,
-                message: `Withdrawal requested successfully! Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Net: ${netPayout.toFixed(4)} TON after 5% processing fee.`,
-                withdrawnCoins: withdrawCoins,
-                withdrawnTon: tonPayout,
-                netTon: netPayout,
-                feeTon: serviceFee,
-                newBalance: user.balance - withdrawCoins
-              });
-            }
-          );
-        }
-      );
+      // Deduct balance and insert transaction
+      db.serialize(() => {
+        db.run(
+          'UPDATE users SET balance = balance - ? WHERE id = ?',
+          [withdrawCoins, userId],
+          function(updateErr) {
+            if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+            const details = `Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Fee: ${serviceFee.toFixed(4)} TON (${feePercent * 100}%). Net: ${netPayout.toFixed(4)} TON. ${method || 'TON Wallet'} Payout to ${req.body.address || 'UQDxTONWallet...'}`;
+            
+            db.run(
+              `INSERT INTO transactions (user_id, type, amount, points, status, details)
+               VALUES (?, 'withdrawal', ?, 0, 'completed', ?)`,
+              [userId, -tonPayout, details],
+              function(insertErr) {
+                if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+                res.json({
+                  success: true,
+                  message: `Withdrawal requested successfully! Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Net: ${netPayout.toFixed(4)} TON after ${(feePercent * 100)}% processing fee.`,
+                  withdrawnCoins: withdrawCoins,
+                  withdrawnTon: tonPayout,
+                  netTon: netPayout,
+                  feeTon: serviceFee,
+                  feePercent: feePercent * 100,
+                  newBalance: user.balance - withdrawCoins
+                });
+              }
+            );
+          }
+        );
+      });
     });
   });
 });
