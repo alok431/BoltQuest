@@ -19,7 +19,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
       setMsg(`🎉 Upgrade successful! Welcome to Premium.`);
     } catch (err) {
       console.error(err);
-      setMsg('❌ Upgrade failed. Please check your TON balance.');
+      setMsg('❌ Upgrade failed. Please check your Stars balance.');
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
             Get early access to premium tasks, 2x earnings boost, and access to exclusive high-payout campaigns.
           </div>
           <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffd700', marginBottom: '16px' }}>
-            Price: 10.00 TON / month
+            Price: 17,000 Coins / month
           </div>
           <button 
             className="btn-primary" 
@@ -131,7 +131,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
           <ShieldAlert size={24} color="var(--accent-red)" />
           <div style={{ fontSize: '13px', fontWeight: '700' }}>Premium Offers Locked</div>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-            Upgrade your account to unlock these high-paying offers yielding up to 5+ TON each!
+            Upgrade your account to unlock these high-paying offers yielding up to 8,500+ Coins each!
           </div>
         </div>
       ) : premiumOffers.length === 0 ? (
@@ -160,7 +160,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
                   </div>
                   <div className="task-desc" style={{ fontSize: '10px', marginTop: '3px' }}>{task.description}</div>
                   <div style={{ display: 'flex', gap: '8px', marginTop: '6px', fontSize: '9px', fontWeight: '600' }}>
-                    <span style={{ color: '#ffd700' }}>+{task.reward_amount.toFixed(2)} TON</span>
+                    <span style={{ color: '#ffd700' }}>+{task.reward_amount} Coins</span>
                     <span style={{ color: 'var(--text-muted)' }}>•</span>
                     <span style={{ color: 'var(--accent-cyan)' }}>+{(task.reward_amount * 200).toFixed(0)} pts</span>
                   </div>
@@ -228,7 +228,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
             <div style={{ fontSize: '20px' }}>⚡</div>
             <div>
               <div className="task-title">2x Earnings Boost</div>
-              <div className="task-desc">Earn double TON balance payouts and points on all tasks.</div>
+              <div className="task-desc">Earn double Coin payouts and points on all tasks.</div>
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
             <div style={{ fontSize: '20px' }}>🔗</div>
             <div>
               <div className="task-title">High-Value Affiliate Commission</div>
-              <div className="task-desc">Access campaign links yielding up to 25 TON per qualified referral.</div>
+              <div className="task-desc">Access campaign links yielding up to 42,500 Coins per qualified referral.</div>
             </div>
           </div>
         </div>

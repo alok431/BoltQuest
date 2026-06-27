@@ -38,14 +38,14 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
     e.preventDefault();
     if (!amount || withdrawing) return;
     
-    const withdrawAmount = parseFloat(amount);
-    if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
-      setMsg('❌ Please enter a valid TON withdrawal amount.');
+    const withdrawCoins = parseInt(amount, 10);
+    if (isNaN(withdrawCoins) || withdrawCoins <= 0) {
+      setMsg('❌ Please enter a valid Coins amount to withdraw.');
       return;
     }
 
-    if (user.balance < withdrawAmount) {
-      setMsg('❌ Insufficient TON balance.');
+    if (user.balance < withdrawCoins) {
+      setMsg('❌ Insufficient Coins balance.');
       return;
     }
 
@@ -53,8 +53,9 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
     setMsg('');
     try {
       const activeAddress = method === 'TON Wallet' ? nonCustodialAddress : custodialAddress;
-      const result = await requestWithdrawal(withdrawAmount, method, activeAddress);
-      setMsg(`🎉 Withdrawal of ${withdrawAmount.toFixed(2)} TON requested successfully!`);
+      const result = await requestWithdrawal(withdrawCoins, method, activeAddress);
+      const tonAmt = withdrawCoins / 1700;
+      setMsg(`🎉 Withdrawal of ${withdrawCoins} Coins (${tonAmt.toFixed(4)} TON) requested successfully!`);
       setAmount('');
       if (refreshUser) refreshUser();
     } catch (err) {
@@ -164,7 +165,7 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
 
       {/* Withdraw section */}
       <div className="section-title">
-        <DollarSign size={12} /> Withdraw TON
+        <DollarSign size={12} /> Convert & Withdraw Coins
       </div>
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -173,10 +174,10 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
               Available Balance
             </div>
             <div style={{ fontSize: '26px', fontWeight: '800', color: '#00d4ff' }}>
-              {user ? user.balance.toFixed(2) : '0.00'} TON
+              🪙 {user ? user.balance.toLocaleString() : '0'} Coins
             </div>
           </div>
-          <div style={{ fontSize: '24px' }}>💎</div>
+          <div style={{ fontSize: '24px' }}>🪙</div>
         </div>
 
         {msg && (
@@ -191,12 +192,29 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
         )}
 
         <form onSubmit={handleWithdraw}>
+          {amount && parseInt(amount, 10) > 0 && (
+            <div style={{
+              fontSize: '11px',
+              color: 'var(--accent-cyan)',
+              marginBottom: '10px',
+              padding: '6px 10px',
+              background: 'rgba(0, 212, 255, 0.05)',
+              borderRadius: '8px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span>Rate: 1700 Coins = 1 TON</span>
+              <strong>Payout: {(parseInt(amount, 10) / 1700).toFixed(4)} TON</strong>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <div style={{ flex: '1' }}>
               <input 
                 type="number" 
-                step="0.01" 
-                placeholder="Amount in TON" 
+                step="1" 
+                placeholder="Amount in Coins" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
@@ -226,7 +244,7 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
             className="btn-primary"
             disabled={withdrawing}
           >
-            {withdrawing ? <Loader2 size={16} className="animate-spin" style={{ margin: '0 auto' }} /> : 'Request TON Payout'}
+            {withdrawing ? <Loader2 size={16} className="animate-spin" style={{ margin: '0 auto' }} /> : 'Convert & Withdraw'}
           </button>
         </form>
       </div>
@@ -263,7 +281,11 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
                 color: tx.amount < 0 ? '#ff4757' : '#2ed573',
                 whiteSpace: 'nowrap'
               }}>
-                {tx.amount < 0 ? '-' : '+'}{Math.abs(tx.amount).toFixed(2)} {tx.type === 'subscription' ? '⭐' : 'TON'}
+                {tx.amount < 0 ? (
+                  tx.type === 'subscription' ? `${tx.amount} ⭐` : `${tx.amount.toFixed(4)} TON`
+                ) : (
+                  `+${tx.amount.toLocaleString()} Coins`
+                )}
               </div>
             </div>
             <div style={{ fontSize: '9px', color: '#00d4ff', marginTop: '6px', textAlign: 'right', fontWeight: '700' }}>

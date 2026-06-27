@@ -111,7 +111,7 @@ export default function Surveys({ surveys, completeSurvey, user }) {
           <div style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} /> Survey Completed Successfully!
           </div>
-          <div>You earned <strong>+{successInfo.rewardAmount.toFixed(2)} TON</strong> and <strong>+{successInfo.rewardPoints} Points</strong>!</div>
+          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong> and <strong>+{successInfo.rewardPoints} Points</strong>!</div>
           {successInfo.levelInfo?.leveledUp && (
             <div style={{ color: '#ffd700', fontWeight: '700', marginTop: '4px' }}>
               🎉 Leveled up to Level {successInfo.levelInfo.newLevel}!
@@ -260,7 +260,7 @@ export default function Surveys({ surveys, completeSurvey, user }) {
                             </span>
                             <span>•</span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)', fontWeight: '700' }}>
-                              <Gift size={12} /> +{survey.reward_amount.toFixed(2)} TON 
+                              <Gift size={12} /> +{survey.reward_amount} Coins 
                               {user?.premium_status === 1 && ' (2x Booster)'}
                             </span>
                           </div>
@@ -307,7 +307,7 @@ export default function Surveys({ surveys, completeSurvey, user }) {
                 <div style={{ fontWeight: '700', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                   <HelpCircle size={14} /> How it works
                 </div>
-                Complete third-party surveys matching your demographic to earn points and TON rewards instantly. 
+                Complete third-party surveys matching your demographic to earn points and Coin rewards instantly. 
                 {user?.premium_status === 1 ? (
                   <strong style={{ color: 'var(--accent-gold)', marginLeft: '4px' }}>
                     🔥 Your 2x Premium Booster is active!

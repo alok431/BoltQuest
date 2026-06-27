@@ -118,11 +118,11 @@ function rewardUserForTask(userId, task) {
                 const referrerId = referral.referrer_id;
                 db.run('UPDATE referrals SET status = \'completed\' WHERE id = ?', [referral.id], (upRefErr) => {
                   if (!upRefErr) {
-                    db.run('UPDATE users SET points = points + 500, balance = balance + 0.50 WHERE id = ?', [referrerId], (upUsrErr) => {
+                    db.run('UPDATE users SET points = points + 500, balance = balance + 850 WHERE id = ?', [referrerId], (upUsrErr) => {
                       if (!upUsrErr) {
                         db.run(
                           `INSERT INTO transactions (user_id, type, amount, points, status, details)
-                           VALUES (?, 'referral_bonus', 0.50, 500, 'completed', ?)`,
+                           VALUES (?, 'referral_bonus', 850, 500, 'completed', ?)`,
                           [referrerId, `Referral verified: User (ID: ${userId}) completed their first task`]
                         );
                       }

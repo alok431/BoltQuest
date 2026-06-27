@@ -62,7 +62,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           <div style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} /> Task Completed!
           </div>
-          <div>You earned <strong>+{successInfo.rewardAmount.toFixed(2)} TON</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
+          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
           {successInfo.levelInfo?.leveledUp && (
             <div style={{ color: '#ffd700', fontWeight: '700', marginTop: '4px' }}>
               🎉 Leveled up to Level {successInfo.levelInfo.newLevel}!
@@ -111,13 +111,13 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
             }
 
             return [
-              { day: 1, ton: '0.50', points: '50' },
-              { day: 2, ton: '1.00', points: '100' },
-              { day: 3, ton: '1.50', points: '150' },
-              { day: 4, ton: '2.00', points: '200' },
-              { day: 5, ton: '2.50', points: '250' },
-              { day: 6, ton: '3.00', points: '300' },
-              { day: 7, ton: '5.00', points: '500' }
+              { day: 1, coins: '850', points: '50' },
+              { day: 2, coins: '1700', points: '100' },
+              { day: 3, coins: '2550', points: '150' },
+              { day: 4, coins: '3400', points: '200' },
+              { day: 5, coins: '4250', points: '250' },
+              { day: 6, coins: '5100', points: '300' },
+              { day: 7, coins: '8500', points: '500' }
             ].map((item) => {
               // Determine day status
               let isClaimed = false;
@@ -177,7 +177,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
                   </div>
 
                   <div style={{ fontSize: '12px', margin: '2px 0' }}>
-                    {isClaimed ? '✅' : isActive ? '💎' : '🔒'}
+                    {isClaimed ? '✅' : isActive ? '🪙' : '🔒'}
                   </div>
 
                   <div style={{ 
@@ -186,7 +186,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
                     color: '#fff',
                     lineHeight: '1.2'
                   }}>
-                    +{item.ton}
+                    +{item.coins}
                   </div>
                   <div style={{ 
                     fontSize: '7px', 

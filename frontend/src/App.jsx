@@ -285,7 +285,7 @@ export default function App() {
         {user && (
           <div className="balance-mini">
             <div className="balance-item" onClick={() => handleSwitchTab('wallet')}>
-              💎 {user.balance.toFixed(2)} TON
+              🪙 {user.balance.toLocaleString()} Coins
             </div>
             <div className="balance-item points" style={{ cursor: 'default' }}>
               ⭐ {user.points.toLocaleString()} Points

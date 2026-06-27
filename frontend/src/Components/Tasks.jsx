@@ -53,7 +53,7 @@ export default function Tasks({ tasks, completeTask, user }) {
           <div style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} /> Task Completed Successfully!
           </div>
-          <div>You earned <strong>+{successInfo.rewardAmount.toFixed(2)} TON</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
+          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
           {successInfo.levelInfo?.leveledUp && (
             <div style={{ color: '#ffd700', fontWeight: '700', marginTop: '4px' }}>
               🎉 Leveled up to Level {successInfo.levelInfo.newLevel}!
@@ -114,7 +114,7 @@ export default function Tasks({ tasks, completeTask, user }) {
         </div>
       </div>
 
-      <div className="section-title">⭐ Easy Tasks (0.15 - 0.50 TON)</div>
+      <div className="section-title">🪙 Easy Tasks (255 - 850 Coins)</div>
       {easyTasks.map(task => {
         const isCompleted = task.user_status === 'completed';
         const isLoading = loadingTaskId === task.id;
@@ -126,7 +126,7 @@ export default function Tasks({ tasks, completeTask, user }) {
                 <div className="task-title">{task.title}</div>
                 <div className="task-desc">{task.description}</div>
                 <div className="task-reward">
-                  +{task.reward_amount.toFixed(2)} TON
+                  +{task.reward_amount} Coins
                   {user?.premium_status === 1 && (
                     <span style={{ fontSize: '10px', color: '#ff6b81', marginLeft: '6px', fontWeight: '700' }}>
                       (Premium 2x Active)
@@ -157,7 +157,7 @@ export default function Tasks({ tasks, completeTask, user }) {
       })}
 
       <div className="section-title" style={{ marginTop: '20px' }}>
-        💎 Premium Tasks (1.00 - 5.00 TON) <span className="premium-tag">PREMIUM</span>
+        🪙 Premium Tasks (1700 - 8500 Coins) <span className="premium-tag">PREMIUM</span>
       </div>
       {premiumTasks.map(task => {
         const isCompleted = task.user_status === 'completed';
@@ -170,7 +170,7 @@ export default function Tasks({ tasks, completeTask, user }) {
                 <div className="task-title" style={{ color: '#ff6b81' }}>{task.title}</div>
                 <div className="task-desc">{task.description}</div>
                 <div className="task-reward" style={{ color: '#ff6b81' }}>
-                  +{task.reward_amount.toFixed(2)} TON
+                  +{task.reward_amount} Coins
                   {user?.premium_status === 1 && (
                     <span style={{ fontSize: '10px', color: '#ff4757', marginLeft: '6px', fontWeight: '700' }}>
                       (Premium 2x Active)

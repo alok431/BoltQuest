@@ -276,16 +276,16 @@ if (process.env.DATABASE_URL) {
       console.log("Seeding initial PostgreSQL data...");
 
       const initialTasks = [
-        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
-        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
-        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
-        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
-        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
-        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
-        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
-        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
-        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
+        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 255, 0, 'easy', 'https://instagram.com/boltquest'],
+        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 425, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
+        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 340, 0, 'easy', 'https://tiktok.com/@boltquest'],
+        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 510, 0, 'easy', 'https://youtube.com/boltquest'],
+        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 765, 0, 'easy', 'https://discord.gg/boltquest'],
+        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 4250, 1, 'premium', 'https://vpn.boltquest.com'],
+        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 2550, 1, 'premium', 'https://play.google.com/store'],
+        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 8500, 1, 'premium', 'https://bank.boltquest.com/credit'],
+        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 6375, 1, 'premium', 'https://crypto.boltquest.com'],
+        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 17000, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
       ];
 
       initialTasks.forEach(t => {
@@ -298,11 +298,11 @@ if (process.env.DATABASE_URL) {
 
       // Seed challenges
       const initialChallenges = [
-        [1, 'Complete 5 Tasks Daily', 'Complete at least 5 tasks every day', 'daily', 5, 50.00, 0, 7],
-        [2, 'Social Media Master', 'Complete all social media tasks (Follow, Like, Comment)', 'weekly', 10, 35.00, 500, 7],
-        [3, 'Premium Surge', 'Complete 2 premium tasks', 'weekly', 2, 15.00, 0, 3],
-        [4, 'Referral Rockstar', 'Refer 5 friends who complete at least 1 task', 'streak', 5, 100.00, 0, 30],
-        [5, 'Earn 50 TON This Week', 'Earn 50 TON through completing tasks', 'weekly', 50, 0.00, 200, 7]
+        [1, 'Complete 5 Tasks Daily', 'Complete at least 5 tasks every day', 'daily', 5, 85000, 0, 7],
+        [2, 'Social Media Master', 'Complete all social media tasks (Follow, Like, Comment)', 'weekly', 10, 59500, 500, 7],
+        [3, 'Premium Surge', 'Complete 2 premium tasks', 'weekly', 2, 25500, 0, 3],
+        [4, 'Referral Rockstar', 'Refer 5 friends who complete at least 1 task', 'streak', 5, 170000, 0, 30],
+        [5, 'Earn 85,000 Coins This Week', 'Earn 85,000 Coins through completing tasks', 'weekly', 85000, 0, 200, 7]
       ];
 
       initialChallenges.forEach(c => {
@@ -351,7 +351,7 @@ if (process.env.DATABASE_URL) {
           1,
           'Web3 User Survey', 
           'Help us understand your usage of cryptocurrency and web3 miniapps.', 
-          1.50, 
+          2550, 
           300, 
           5,
           JSON.stringify([
@@ -363,8 +363,8 @@ if (process.env.DATABASE_URL) {
         [
           2,
           'Gaming Preferences Poll', 
-          'We are building a new TON game. Tell us what you like to play!', 
-          0.75, 
+          'We are building a new game. Tell us what you like to play!', 
+          1275, 
           150, 
           3,
           JSON.stringify([
@@ -377,7 +377,7 @@ if (process.env.DATABASE_URL) {
           3,
           'VPN Usage Feedback', 
           'Feedback on VPN speeds and privacy setups.', 
-          1.00, 
+          1700, 
           200, 
           4,
           JSON.stringify([
@@ -389,7 +389,7 @@ if (process.env.DATABASE_URL) {
           4,
           'Telegram Features Poll', 
           'Tell us what features you want in our Telegram bot ecosystem.', 
-          0.50, 
+          850, 
           100, 
           2,
           JSON.stringify([
@@ -409,11 +409,11 @@ if (process.env.DATABASE_URL) {
 
       // Seed Mock Referrers & Referrals
       const referrers = [
-        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
-        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
-        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },
-        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 74.0 },
-        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 48.0 }
+        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 241400 },
+        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 200600 },
+        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 161500 },
+        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 125800 },
+        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 81600 }
       ];
 
       referrers.forEach((ref) => {
@@ -659,16 +659,16 @@ if (process.env.DATABASE_URL) {
       console.log("Seeding initial SQLite data...");
 
       const initialTasks = [
-        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 0.15, 0, 'easy', 'https://instagram.com/boltquest'],
-        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 0.25, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 0.20, 0, 'easy', 'https://tiktok.com/@boltquest'],
-        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 0.30, 0, 'easy', 'https://youtube.com/boltquest'],
-        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 0.45, 0, 'easy', 'https://discord.gg/boltquest'],
-        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 2.50, 1, 'premium', 'https://vpn.boltquest.com'],
-        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 1.50, 1, 'premium', 'https://play.google.com/store'],
-        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 5.00, 1, 'premium', 'https://bank.boltquest.com/credit'],
-        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 3.75, 1, 'premium', 'https://crypto.boltquest.com'],
-        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 10.00, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
+        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 255, 0, 'easy', 'https://instagram.com/boltquest'],
+        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 425, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
+        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 340, 0, 'easy', 'https://tiktok.com/@boltquest'],
+        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 510, 0, 'easy', 'https://youtube.com/boltquest'],
+        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 765, 0, 'easy', 'https://discord.gg/boltquest'],
+        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 4250, 1, 'premium', 'https://vpn.boltquest.com'],
+        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 2550, 1, 'premium', 'https://play.google.com/store'],
+        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 8500, 1, 'premium', 'https://bank.boltquest.com/credit'],
+        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 6375, 1, 'premium', 'https://crypto.boltquest.com'],
+        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 17000, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
       ];
 
       initialTasks.forEach(t => {
@@ -679,11 +679,11 @@ if (process.env.DATABASE_URL) {
       });
 
       const initialChallenges = [
-        [1, 'Complete 5 Tasks Daily', 'Complete at least 5 tasks every day', 'daily', 5, 50.00, 0, 7],
-        [2, 'Social Media Master', 'Complete all social media tasks (Follow, Like, Comment)', 'weekly', 10, 35.00, 500, 7],
-        [3, 'Premium Surge', 'Complete 2 premium tasks', 'weekly', 2, 15.00, 0, 3],
-        [4, 'Referral Rockstar', 'Refer 5 friends who complete at least 1 task', 'streak', 5, 100.00, 0, 30],
-        [5, 'Earn 50 TON This Week', 'Earn 50 TON through completing tasks', 'weekly', 50, 0.00, 200, 7]
+        [1, 'Complete 5 Tasks Daily', 'Complete at least 5 tasks every day', 'daily', 5, 85000, 0, 7],
+        [2, 'Social Media Master', 'Complete all social media tasks (Follow, Like, Comment)', 'weekly', 10, 59500, 500, 7],
+        [3, 'Premium Surge', 'Complete 2 premium tasks', 'weekly', 2, 25500, 0, 3],
+        [4, 'Referral Rockstar', 'Refer 5 friends who complete at least 1 task', 'streak', 5, 170000, 0, 30],
+        [5, 'Earn 85,000 Coins This Week', 'Earn 85,000 Coins through completing tasks', 'weekly', 85000, 0, 200, 7]
       ];
 
       initialChallenges.forEach(c => {
@@ -728,7 +728,7 @@ if (process.env.DATABASE_URL) {
           1,
           'Web3 User Survey', 
           'Help us understand your usage of cryptocurrency and web3 miniapps.', 
-          1.50, 
+          2550, 
           300, 
           5,
           JSON.stringify([
@@ -740,8 +740,8 @@ if (process.env.DATABASE_URL) {
         [
           2,
           'Gaming Preferences Poll', 
-          'We are building a new TON game. Tell us what you like to play!', 
-          0.75, 
+          'We are building a new game. Tell us what you like to play!', 
+          1275, 
           150, 
           3,
           JSON.stringify([
@@ -754,7 +754,7 @@ if (process.env.DATABASE_URL) {
           3,
           'VPN Usage Feedback', 
           'Feedback on VPN speeds and privacy setups.', 
-          1.00, 
+          1700, 
           200, 
           4,
           JSON.stringify([
@@ -766,7 +766,7 @@ if (process.env.DATABASE_URL) {
           4,
           'Telegram Features Poll', 
           'Tell us what features you want in our Telegram bot ecosystem.', 
-          0.50, 
+          850, 
           100, 
           2,
           JSON.stringify([
@@ -785,11 +785,11 @@ if (process.env.DATABASE_URL) {
 
       // Seed Mock Referrers & Referrals
       const referrers = [
-        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 142.0 },
-        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 118.0 },
-        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 95.0 },
-        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 74.0 },
-        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 48.0 }
+        { id: 2, username: 'Alex_Crypto', country: 'USA', referrals: 142, telegramId: 'mock_alex', balance: 241400 },
+        { id: 3, username: 'Luna_Trader', country: 'UK', referrals: 118, telegramId: 'mock_luna', balance: 200600 },
+        { id: 4, username: 'John_Web3', country: 'Canada', referrals: 95, telegramId: 'mock_john', balance: 161500 },
+        { id: 5, username: 'Maria_Tasks', country: 'Spain', referrals: 74, telegramId: 'mock_maria', balance: 125800 },
+        { id: 6, username: 'Sophie_Earn', country: 'France', referrals: 48, telegramId: 'mock_sophie', balance: 81600 }
       ];
 
       referrers.forEach((ref) => {

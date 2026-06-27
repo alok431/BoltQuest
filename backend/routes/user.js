@@ -23,13 +23,13 @@ router.post('/auth', (req, res) => {
       return res.json(user);
     }
 
-    // New user signup - initial TON balance = 0.0, points = 0, level = 1, xp = 0
+    // New user signup - initial Coins balance = 0, points = 0, level = 1, xp = 0
     const isPostgres = !!process.env.DATABASE_URL;
     const insertSql = isPostgres
       ? `INSERT INTO users (telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
-         VALUES (?, ?, ?, 1, 0, 0.0, 0, 0, 0) RETURNING id`
+         VALUES (?, ?, ?, 1, 0, 0, 0, 0, 0) RETURNING id`
       : `INSERT INTO users (telegram_id, username, email, level, xp, balance, points, premium_status, login_streak)
-         VALUES (?, ?, ?, 1, 0, 0.0, 0, 0, 0)`;
+         VALUES (?, ?, ?, 1, 0, 0, 0, 0, 0)`;
 
     db.run(
       insertSql,
@@ -66,9 +66,9 @@ router.get('/', (req, res) => {
               const stats = {
                 tasksCompleted: tasksRow?.count || 0,
                 referralsCount: refRow?.count || 0,
-                totalEarned: earnRow?.total || 0.0,
+                totalEarned: earnRow?.total || 0,
                 todayTasksCompleted: todayRow?.count || 0,
-                todayEarned: todayEarnRow?.total || 0.0
+                todayEarned: todayEarnRow?.total || 0
               };
 
               res.json({
@@ -133,15 +133,15 @@ router.post('/daily-bonus', (req, res) => {
     }
     
     const rewards = {
-      1: 0.50,
-      2: 1.00,
-      3: 1.50,
-      4: 2.00,
-      5: 2.50,
-      6: 3.00,
-      7: 5.00
+      1: 850,
+      2: 1700,
+      3: 2550,
+      4: 3400,
+      5: 4250,
+      6: 5100,
+      7: 8500
     };
-    const bonusAmount = rewards[newStreak] || 2.50;
+    const bonusAmount = rewards[newStreak] || 4250;
     
     // Update user balance, login_streak, and last_login_date with condition to block duplicate updates
     db.run(

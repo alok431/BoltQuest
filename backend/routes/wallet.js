@@ -21,10 +21,10 @@ router.get('/transactions', (req, res) => {
 // POST /api/wallet/withdraw
 router.post('/withdraw', (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;
-  const { amount, method } = req.body; // method could be 'PayPal' or 'Bank Transfer'
+  const { amount, method } = req.body; // amount is in Coins
 
-  const withdrawAmount = parseFloat(amount);
-  if (isNaN(withdrawAmount) || withdrawAmount <= 0) {
+  const withdrawCoins = parseInt(amount, 10);
+  if (isNaN(withdrawCoins) || withdrawCoins <= 0) {
     return res.status(400).json({ error: 'Invalid withdrawal amount' });
   }
 
@@ -32,32 +32,38 @@ router.post('/withdraw', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    if (user.balance < withdrawAmount) {
+    if (user.balance < withdrawCoins) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
+
+    // Conversion rate: 1000 coins = 100 INR, 170 INR = 1 TON.
+    // 1 coin = 0.1 INR.
+    // TON = (coins * 0.1) / 170 = coins / 1700.
+    const tonPayout = withdrawCoins / 1700.0;
 
     // Deduct balance and insert transaction
     db.serialize(() => {
       db.run(
         'UPDATE users SET balance = balance - ? WHERE id = ?',
-        [withdrawAmount, userId],
+        [withdrawCoins, userId],
         function(updateErr) {
           if (updateErr) return res.status(500).json({ error: updateErr.message });
 
-          const details = `${method || 'TON Wallet'} Withdrawal to ${req.body.address || 'UQDxTONWallet...'}`;
+          const details = `Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. ${method || 'TON Wallet'} Payout to ${req.body.address || 'UQDxTONWallet...'}`;
           
           db.run(
             `INSERT INTO transactions (user_id, type, amount, points, status, details)
              VALUES (?, 'withdrawal', ?, 0, 'completed', ?)`,
-            [userId, -withdrawAmount, details],
+            [userId, -tonPayout, details],
             function(insertErr) {
               if (insertErr) return res.status(500).json({ error: insertErr.message });
 
               res.json({
                 success: true,
-                message: 'Withdrawal request completed successfully!',
-                withdrawnAmount: withdrawAmount,
-                newBalance: user.balance - withdrawAmount
+                message: `Withdrawal request completed successfully! Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON.`,
+                withdrawnCoins: withdrawCoins,
+                withdrawnTon: tonPayout,
+                newBalance: user.balance - withdrawCoins
               });
             }
           );

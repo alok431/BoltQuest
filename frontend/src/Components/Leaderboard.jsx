@@ -81,7 +81,7 @@ export default function Leaderboard({ leaderboard, user }) {
               </div>
             </div>
             <div className="user-points" style={{ color: 'var(--accent-gold)' }}>
-              {player.earnings.toFixed(2)} TON
+              {player.earnings.toLocaleString()} Coins
             </div>
           </div>
         );
@@ -96,7 +96,7 @@ export default function Leaderboard({ leaderboard, user }) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Earnings Ranking:</div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-gold)' }}>#{myEarnRank} Globally ({myEarnAmount.toFixed(2)} TON)</div>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--accent-gold)' }}>#{myEarnRank} Globally ({myEarnAmount.toLocaleString()} Coins)</div>
           </div>
         </div>
       </div>

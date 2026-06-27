@@ -182,7 +182,7 @@ export default function Admin() {
                 </div>
               </div>
               <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent-cyan)' }}>
-                +{t.reward_amount.toFixed(2)} TON
+                +{t.reward_amount} Coins
               </div>
             </div>
             <div style={{ 
@@ -290,13 +290,13 @@ export default function Admin() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
             <div>
-              <label style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Reward (TON)</label>
+              <label style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>Reward (Coins)</label>
               <input 
                 type="number" 
-                step="0.05"
+                step="1"
                 value={taskReward} 
                 onChange={(e) => setTaskReward(e.target.value)} 
-                placeholder="e.g. 1.50"
+                placeholder="e.g. 2550"
                 required 
               />
             </div>
