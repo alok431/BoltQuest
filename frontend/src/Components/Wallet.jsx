@@ -260,22 +260,20 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
         )}
 
         <form onSubmit={handleWithdraw}>
-          {amount && parseInt(amount, 10) > 0 && (
-            <div style={{
-              fontSize: '11px',
-              color: 'var(--accent-cyan)',
-              marginBottom: '10px',
-              padding: '6px 10px',
-              background: 'rgba(0, 212, 255, 0.05)',
-              borderRadius: '8px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <span>Rate: 1700 Coins = 1 TON</span>
-              <strong>Payout: {(parseInt(amount, 10) / 1700).toFixed(4)} TON</strong>
-            </div>
-          )}
+          <div style={{
+            fontSize: '11px',
+            color: 'var(--accent-cyan)',
+            marginBottom: '10px',
+            padding: '6px 10px',
+            background: 'rgba(0, 212, 255, 0.05)',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span>Rate: 1700 Coins = 1 TON</span>
+            <strong>Payout: {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON</strong>
+          </div>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <div style={{ flex: '1' }}>
