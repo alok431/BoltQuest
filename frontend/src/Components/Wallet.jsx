@@ -23,55 +23,7 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
   const [savingWallet, setSavingWallet] = useState(false);
   const [custodialAddress, setCustodialAddress] = useState('No Username Connected');
 
-  // Streak Freeze shop state
-  const [shopLoading, setShopLoading] = useState(false);
-  const [shopMsg, setShopMsg] = useState('');
-  const [starsTxModalOpen, setStarsTxModalOpen] = useState(false);
-  const [starsTxStep, setStarsTxStep] = useState('idle'); // 'idle' | 'pending' | 'success'
 
-  const buyStreakFreeze = async (paymentMethod, txHash = '') => {
-    setShopLoading(true);
-    setShopMsg('');
-    try {
-      const res = await fetch(`${API_BASE}/user/buy-streak-freeze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'user-id': user.id
-        },
-        body: JSON.stringify({ paymentMethod, txHash })
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Purchase failed');
-      }
-      setShopMsg('✓ Streak Freeze item purchased successfully!');
-      if (refreshUser) await refreshUser();
-    } catch (err) {
-      console.error(err);
-      setShopMsg(`❌ Error: ${err.message}`);
-    } finally {
-      setShopLoading(false);
-    }
-  };
-
-  const startStarsPayment = () => {
-    setStarsTxModalOpen(true);
-    setStarsTxStep('pending');
-    
-    // Simulate Telegram Stars checkout flow
-    setTimeout(async () => {
-      const randomHash = 'stars_' + Array.from({ length: 12 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-      try {
-        await buyStreakFreeze('stars', randomHash);
-        setStarsTxStep('success');
-      } catch (err) {
-        console.error(err);
-        setStarsTxStep('idle');
-        setStarsTxModalOpen(false);
-      }
-    }, 2000);
-  };
 
   React.useEffect(() => {
     if (user?.ton_wallet) {
@@ -433,96 +385,7 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
         </form>
       </div>
 
-      {/* Items Shop */}
-      <div className="section-title">📦 Item Shop (Power-Ups)</div>
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: '800', color: '#ffd700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ❄️ Streak Freeze Protection
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.4' }}>
-              Preserves your login streak bonus if you miss a day. Used automatically.
-            </div>
-          </div>
-          <div style={{ background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: 'bold', border: '1px solid var(--border-color)', color: '#ffd700', whiteSpace: 'nowrap' }}>
-            Owned: {user.streak_freezes || 0}
-          </div>
-        </div>
 
-        {shopMsg && (
-          <div style={{
-            fontSize: '11px',
-            color: shopMsg.includes('❌') ? '#ff4757' : '#2ed573',
-            marginBottom: '10px',
-            fontWeight: '600'
-          }}>
-            {shopMsg}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button 
-            className="btn-secondary" 
-            style={{ flex: 1, padding: '8px', fontSize: '10px', borderColor: 'rgba(255, 215, 0, 0.3)' }}
-            onClick={() => buyStreakFreeze('coins')}
-            disabled={shopLoading}
-          >
-            Buy (1,000 Coins)
-          </button>
-          <button 
-            className="btn-secondary" 
-            style={{ flex: 1, padding: '8px', fontSize: '10px', borderColor: 'rgba(0, 212, 255, 0.3)', color: 'var(--accent-cyan)' }}
-            onClick={startStarsPayment}
-            disabled={shopLoading}
-          >
-            Buy (50 Stars)
-          </button>
-        </div>
-      </div>
-
-      {/* Stars checkout simulated Modal overlay */}
-      {starsTxModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.85)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          padding: '20px'
-        }}>
-          <div className="card" style={{ maxWidth: '300px', width: '100%', padding: '20px', border: '1px solid #ffd700', textAlign: 'center', background: 'var(--bg-primary)' }}>
-            <div style={{ fontSize: '26px', marginBottom: '8px' }}>⭐</div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '4px' }}>Telegram Stars Pay</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Invoice: 1x Streak Freeze Protection</div>
-            
-            {starsTxStep === 'pending' ? (
-              <>
-                <Loader2 size={36} className="animate-spin" style={{ margin: '0 auto 16px auto', color: '#ffd700' }} />
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Awaiting validation from Telegram Stars API (Charging 50 Stars)...</div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: '32px', color: '#2ed573', marginBottom: '12px' }}>✓</div>
-                <div style={{ fontSize: '12px', color: '#2ed573', fontWeight: 'bold', marginBottom: '6px' }}>Payment Complete</div>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '16px' }}>Item added to your inventory.</div>
-                <button 
-                  className="btn-primary" 
-                  style={{ background: 'var(--grad-success)', border: 'none', color: '#000', padding: '8px 16px', fontSize: '11px', fontWeight: 'bold' }}
-                  onClick={() => setStarsTxModalOpen(false)}
-                >
-                  Done
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Transaction History */}
       <div className="section-title">📜 Transaction History</div>

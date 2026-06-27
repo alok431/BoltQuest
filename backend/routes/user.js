@@ -193,57 +193,7 @@ router.post('/daily-bonus', (req, res) => {
 
 
 
-// POST /api/user/buy-streak-freeze
-router.post('/buy-streak-freeze', (req, res) => {
-  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
-  const { paymentMethod, txHash } = req.body;
 
-  db.get('SELECT balance, streak_freezes FROM users WHERE id = ?', [userId], (err, user) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    if (paymentMethod === 'coins') {
-      const price = 1000;
-      if (user.balance < price) {
-        return res.status(400).json({ error: 'Insufficient Coins balance. Pricing is 1,000 Coins.' });
-      }
-
-      db.serialize(() => {
-        db.run(
-          'UPDATE users SET balance = balance - ?, streak_freezes = streak_freezes + 1 WHERE id = ?',
-          [price, userId],
-          function(updateErr) {
-            if (updateErr) return res.status(500).json({ error: updateErr.message });
-            db.run(
-              `INSERT INTO transactions (user_id, type, amount, points, status, details)
-               VALUES (?, 'item_purchase', ?, 0, 'completed', 'Bought Streak Freeze item')`,
-              [userId, -price]
-            );
-            res.json({ success: true, balance: user.balance - price, streak_freezes: user.streak_freezes + 1 });
-          }
-        );
-      });
-    } else {
-      // Payment method = 'stars' (50 Telegram Stars)
-      db.serialize(() => {
-        db.run(
-          'UPDATE users SET streak_freezes = streak_freezes + 1 WHERE id = ?',
-          [userId],
-          function(updateErr) {
-            if (updateErr) return res.status(500).json({ error: updateErr.message });
-            const hash = txHash || '0x' + Array.from({ length: 16 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
-            db.run(
-              `INSERT INTO transactions (user_id, type, amount, points, status, details)
-               VALUES (?, 'item_purchase', 0, 0, 'completed', ?)`,
-              [userId, `Bought Streak Freeze (Paid 50 Stars, Tx: ${hash.substring(0, 8)}...)`]
-            );
-            res.json({ success: true, balance: user.balance, streak_freezes: user.streak_freezes + 1 });
-          }
-        );
-      });
-    }
-  });
-});
 
 // POST /api/user/settings
 router.post('/settings', (req, res) => {
