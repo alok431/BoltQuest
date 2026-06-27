@@ -275,18 +275,37 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
             <strong>Payout: {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON</strong>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-            <div style={{ flex: '1' }}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+            <div style={{ flex: '2' }}>
               <input 
                 type="number" 
                 step="1" 
-                placeholder="Amount in Coins" 
+                placeholder="Coins" 
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
+                style={{ width: '100%' }}
               />
             </div>
-            <div>
+            <div style={{ 
+              flex: '1.2', 
+              padding: '12px 8px', 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-color)', 
+              borderRadius: '12px',
+              color: 'var(--accent-cyan)',
+              fontSize: '11px',
+              fontWeight: '700',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              ≈ {amount && parseInt(amount, 10) > 0 ? (parseInt(amount, 10) / 1700).toFixed(4) : '0.0000'} TON
+            </div>
+            <div style={{ flex: '1.5' }}>
               <select 
                 value={method} 
                 onChange={(e) => setMethod(e.target.value)}
@@ -297,7 +316,8 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
                   borderRadius: '12px',
                   color: 'white',
                   outline: 'none',
-                  fontSize: '13px'
+                  fontSize: '12px',
+                  width: '100%'
                 }}
               >
                 <option value="TON Wallet">TON Wallet</option>
