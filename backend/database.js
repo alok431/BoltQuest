@@ -91,6 +91,7 @@ if (process.env.DATABASE_URL) {
           telegram_id VARCHAR(255) UNIQUE,
           username VARCHAR(255) NOT NULL,
           email VARCHAR(255),
+          ton_wallet VARCHAR(255),
           level INTEGER DEFAULT 1,
           xp INTEGER DEFAULT 0,
           balance DOUBLE PRECISION DEFAULT 0.0,
@@ -102,6 +103,10 @@ if (process.env.DATABASE_URL) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      db.run(`ALTER TABLE users ADD COLUMN ton_wallet VARCHAR(255)`, (err) => {
+        // Ignore column already exists error
+      });
 
       // 2. Tasks Table
       db.run(`
@@ -408,6 +413,7 @@ if (process.env.DATABASE_URL) {
           telegram_id TEXT UNIQUE,
           username TEXT NOT NULL,
           email TEXT,
+          ton_wallet TEXT,
           level INTEGER DEFAULT 1,
           xp INTEGER DEFAULT 0,
           balance REAL DEFAULT 0.0,
@@ -419,6 +425,10 @@ if (process.env.DATABASE_URL) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      db.run(`ALTER TABLE users ADD COLUMN ton_wallet TEXT`, (err) => {
+        // Ignore column already exists error
+      });
 
       // 2. Tasks Table
       db.run(`

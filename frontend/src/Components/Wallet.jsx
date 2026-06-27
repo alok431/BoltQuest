@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import { CreditCard, DollarSign, ArrowDownRight, ArrowUpRight, Loader2 } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function Wallet({ user, transactions, requestWithdrawal, refreshUser, tgUser }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('TON Wallet');
   const [withdrawing, setWithdrawing] = useState(false);
   const [msg, setMsg] = useState('');
-  const [isEditingPayment, setIsEditingPayment] = useState(null); // 'noncustodial' or 'custodial'
+  const [isEditingPayment, setIsEditingPayment] = useState(null); // 'custodial'
   
-  const [nonCustodialAddress, setNonCustodialAddress] = useState('No Wallet Connected');
+  // TON Wallet address state
+  const [walletAddressInput, setWalletAddressInput] = useState('');
+  const [isEditingTon, setIsEditingTon] = useState(false);
+  const [savingWallet, setSavingWallet] = useState(false);
   const [custodialAddress, setCustodialAddress] = useState('No Username Connected');
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [connecting, setConnecting] = useState(false);
+
+  React.useEffect(() => {
+    if (user?.ton_wallet) {
+      setWalletAddressInput(user.ton_wallet);
+    }
+  }, [user?.ton_wallet]);
 
   React.useEffect(() => {
     if (tgUser?.username) {
@@ -19,19 +27,28 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
     }
   }, [tgUser]);
 
-  const handleConnectWallet = () => {
-    setConnecting(true);
-    setTimeout(() => {
-      setWalletConnected(true);
-      const randomHex = Array.from({ length: 42 }, () => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 62)]).join('');
-      setNonCustodialAddress(`UQ${randomHex}`);
-      setConnecting(false);
-    }, 1200);
-  };
-
-  const handleDisconnectWallet = () => {
-    setWalletConnected(false);
-    setNonCustodialAddress('No Wallet Connected');
+  const handleSaveWalletAddress = async (address) => {
+    setSavingWallet(true);
+    setMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/user/wallet`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'user-id': user.id
+        },
+        body: JSON.stringify({ walletAddress: address })
+      });
+      if (!res.ok) throw new Error('Failed to update wallet address');
+      if (refreshUser) await refreshUser();
+      setIsEditingTon(false);
+      setMsg(address ? '✓ TON Wallet address saved successfully!' : '✓ TON Wallet address removed.');
+    } catch (err) {
+      console.error(err);
+      setMsg(`❌ Save Error: ${err.message}`);
+    } finally {
+      setSavingWallet(false);
+    }
   };
 
   const handleWithdraw = async (e) => {
@@ -49,12 +66,22 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
       return;
     }
 
+    const tonAmt = withdrawCoins / 1700.0;
+    if (tonAmt < 5.0) {
+      setMsg('❌ Minimum withdrawal is 5 TON (8,500 Coins).');
+      return;
+    }
+
+    if (method === 'TON Wallet' && !user?.ton_wallet) {
+      setMsg('❌ Please save your TON Wallet Address first.');
+      return;
+    }
+
     setWithdrawing(true);
     setMsg('');
     try {
-      const activeAddress = method === 'TON Wallet' ? nonCustodialAddress : custodialAddress;
+      const activeAddress = method === 'TON Wallet' ? user.ton_wallet : custodialAddress;
       const result = await requestWithdrawal(withdrawCoins, method, activeAddress);
-      const tonAmt = withdrawCoins / 1700;
       setMsg(`🎉 Withdrawal of ${withdrawCoins} Coins (${tonAmt.toFixed(4)} TON) requested successfully!`);
       setAmount('');
       if (refreshUser) refreshUser();
@@ -92,39 +119,80 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
           <div style={{ fontSize: '20px', marginBottom: '6px' }}>💎</div>
           <div className="task-title" style={{ fontSize: '11px' }}>TON Wallet (Non-Custodial)</div>
           
-          {connecting ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', color: 'var(--text-secondary)', marginTop: '8px' }}>
-              <Loader2 size={12} className="animate-spin" /> Connecting...
-            </div>
-          ) : walletConnected ? (
+          {user?.ton_wallet && !isEditingTon ? (
             <>
-              <div className="task-desc" style={{ wordBreak: 'break-all', fontSize: '9px', color: '#2ed573', fontWeight: '700' }}>
-                ✓ Connected (TON Connect)
+              <div className="task-desc" style={{ wordBreak: 'break-all', fontSize: '9px', color: '#2ed573', fontWeight: '700', marginBottom: '4px' }}>
+                ✓ Address Saved
               </div>
-              <div className="task-desc" style={{ wordBreak: 'break-all', fontSize: '8px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {nonCustodialAddress}
+              <div className="task-desc" style={{ wordBreak: 'break-all', fontSize: '8px', color: 'var(--text-secondary)', fontFamily: 'monospace', background: 'var(--bg-secondary)', padding: '6px 8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                {user.ton_wallet}
               </div>
-              <button 
-                className="btn-secondary" 
-                style={{ marginTop: '8px', color: '#ff4757', borderColor: 'rgba(255, 71, 87, 0.2)' }}
-                onClick={handleDisconnectWallet}
-              >
-                Disconnect
-              </button>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1, padding: '4px 6px', fontSize: '9px' }}
+                  onClick={() => {
+                    setWalletAddressInput(user.ton_wallet);
+                    setIsEditingTon(true);
+                  }}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1, padding: '4px 6px', fontSize: '9px', color: '#ff4757', borderColor: 'rgba(255, 71, 87, 0.2)' }}
+                  onClick={() => handleSaveWalletAddress('')}
+                  disabled={savingWallet}
+                >
+                  Remove
+                </button>
+              </div>
             </>
           ) : (
-            <>
-              <div className="task-desc" style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                No wallet connected.
+            <div>
+              <div className="task-desc" style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                Enter address manually:
               </div>
-              <button 
-                className="btn-primary" 
-                style={{ marginTop: '8px', background: 'var(--grad-cyan-blue)', color: '#000', padding: '6px 10px', fontSize: '10px', fontWeight: '700' }}
-                onClick={handleConnectWallet}
-              >
-                Connect Wallet
-              </button>
-            </>
+              <input 
+                type="text" 
+                value={walletAddressInput}
+                onChange={(e) => setWalletAddressInput(e.target.value)}
+                placeholder="UQ..."
+                style={{ padding: '6px', fontSize: '10px', width: '100%', marginBottom: '6px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '8px' }}
+              />
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button 
+                  className="btn-primary" 
+                  style={{ flex: 1, background: 'var(--grad-cyan-blue)', color: '#000', padding: '6px 4px', fontSize: '9px', fontWeight: '700' }}
+                  onClick={() => handleSaveWalletAddress(walletAddressInput)}
+                  disabled={savingWallet || !walletAddressInput.trim()}
+                >
+                  {savingWallet ? '...' : 'Save'}
+                </button>
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1, padding: '6px 4px', fontSize: '9px' }}
+                  onClick={() => {
+                    const randomHex = Array.from({ length: 42 }, () => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 62)]).join('');
+                    setWalletAddressInput(`UQ${randomHex}`);
+                  }}
+                >
+                  Auto Connect
+                </button>
+                {isEditingTon && (
+                  <button 
+                    className="btn-secondary" 
+                    style={{ padding: '6px 4px', fontSize: '9px' }}
+                    onClick={() => {
+                      setWalletAddressInput(user?.ton_wallet || '');
+                      setIsEditingTon(false);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
@@ -138,11 +206,11 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
                 type="text" 
                 value={custodialAddress} 
                 onChange={(e) => setCustodialAddress(e.target.value)} 
-                style={{ padding: '6px', fontSize: '10px', marginTop: '4px' }}
+                style={{ padding: '6px', fontSize: '10px', marginTop: '4px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '8px', width: '100%' }}
               />
               <button 
                 className="btn-secondary" 
-                style={{ marginTop: '6px', padding: '4px 8px' }}
+                style={{ marginTop: '6px', padding: '4px 8px', fontSize: '10px' }}
                 onClick={() => setIsEditingPayment(null)}
               >
                 Save
@@ -153,7 +221,7 @@ export default function Wallet({ user, transactions, requestWithdrawal, refreshU
               <div className="task-desc" style={{ fontSize: '9px' }}>{custodialAddress}</div>
               <button 
                 className="btn-secondary" 
-                style={{ marginTop: '8px' }}
+                style={{ marginTop: '8px', padding: '4px 8px', fontSize: '10px' }}
                 onClick={() => setIsEditingPayment('custodial')}
               >
                 Edit

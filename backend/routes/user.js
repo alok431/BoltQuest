@@ -220,4 +220,15 @@ router.post('/referral', (req, res) => {
   });
 });
 
+// POST /api/user/wallet
+router.post('/wallet', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { walletAddress } = req.body;
+
+  db.run('UPDATE users SET ton_wallet = ? WHERE id = ?', [walletAddress || null, userId], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true, walletAddress });
+  });
+});
+
 module.exports = router;

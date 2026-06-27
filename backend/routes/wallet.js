@@ -40,6 +40,10 @@ router.post('/withdraw', (req, res) => {
     // 1 coin = 0.1 INR.
     // TON = (coins * 0.1) / 170 = coins / 1700.
     const tonPayout = withdrawCoins / 1700.0;
+    
+    if (tonPayout < 5.0) {
+      return res.status(400).json({ error: 'Minimum withdrawal is 5 TON (8,500 Coins)' });
+    }
 
     // Deduct balance and insert transaction
     db.serialize(() => {
