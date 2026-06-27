@@ -275,18 +275,7 @@ if (process.env.DATABASE_URL) {
 
       console.log("Seeding initial PostgreSQL data...");
 
-      const initialTasks = [
-        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 255, 0, 'easy', 'https://instagram.com/boltquest'],
-        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 425, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 340, 0, 'easy', 'https://tiktok.com/@boltquest'],
-        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 510, 0, 'easy', 'https://youtube.com/boltquest'],
-        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 765, 0, 'easy', 'https://discord.gg/boltquest'],
-        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 4250, 1, 'premium', 'https://vpn.boltquest.com'],
-        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 2550, 1, 'premium', 'https://play.google.com/store'],
-        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 8500, 1, 'premium', 'https://bank.boltquest.com/credit'],
-        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 6375, 1, 'premium', 'https://crypto.boltquest.com'],
-        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 17000, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
-      ];
+      const initialTasks = [];
 
       initialTasks.forEach(t => {
         db.run(`
@@ -346,58 +335,7 @@ if (process.env.DATABASE_URL) {
       });
 
       // Seed surveys
-      const initialSurveys = [
-        [
-          1,
-          'Web3 User Survey', 
-          'Help us understand your usage of cryptocurrency and web3 miniapps.', 
-          2550, 
-          300, 
-          5,
-          JSON.stringify([
-            { q: "How often do you trade cryptocurrency?", opts: ["Daily", "Weekly", "Monthly", "Never"] },
-            { q: "What is your preferred crypto wallet?", opts: ["Tonkeeper", "Telegram Wallet", "Metamask", "Trust Wallet"] },
-            { q: "Have you used TON-based miniapps before?", opts: ["Yes, frequently", "Yes, a few times", "No, this is the first", "Unsure"] }
-          ])
-        ],
-        [
-          2,
-          'Gaming Preferences Poll', 
-          'We are building a new game. Tell us what you like to play!', 
-          1275, 
-          150, 
-          3,
-          JSON.stringify([
-            { q: "What genre of mobile games do you play most?", opts: ["RPG / Strategy", "Puzzle / Casual", "Action / Shooters", "Idle / Clickers"] },
-            { q: "How much time do you spend gaming daily?", opts: ["Less than 30 mins", "30 - 60 mins", "1 - 2 hours", "More than 2 hours"] },
-            { q: "Do you like Web3 elements (NFTs/Tokens) in games?", opts: ["Yes, absolutely", "Maybe if it is fun", "No, it ruins games", "Unsure"] }
-          ])
-        ],
-        [
-          3,
-          'VPN Usage Feedback', 
-          'Feedback on VPN speeds and privacy setups.', 
-          1700, 
-          200, 
-          4,
-          JSON.stringify([
-            { q: "Do you currently use a VPN service?", opts: ["Yes, paid service", "Yes, free service", "No, never", "Occasionally"] },
-            { q: "What is the most important VPN feature to you?", opts: ["Connection Speed", "Security & Privacy", "Server Locations", "Low Price"] }
-          ])
-        ],
-        [
-          4,
-          'Telegram Features Poll', 
-          'Tell us what features you want in our Telegram bot ecosystem.', 
-          850, 
-          100, 
-          2,
-          JSON.stringify([
-            { q: "What notification channel do you check most?", opts: ["Telegram DM", "Telegram Channels", "Email", "SMS"] },
-            { q: "Would you invite friends for extra commissions?", opts: ["Yes, definitely", "Maybe", "No", "Unsure"] }
-          ])
-        ]
-      ];
+      const initialSurveys = [];
 
       initialSurveys.forEach(s => {
         db.run(`
@@ -658,18 +596,7 @@ if (process.env.DATABASE_URL) {
 
       console.log("Seeding initial SQLite data...");
 
-      const initialTasks = [
-        [1, 'Like Instagram Post', 'Like the pinned post on our page', 'balance', 255, 0, 'easy', 'https://instagram.com/boltquest'],
-        [2, 'Follow Twitter', 'Follow @BoltQuestOfficial', 'balance', 425, 0, 'easy', 'https://twitter.com/BoltQuestOfficial'],
-        [3, 'Like TikTok Video', 'Double tap our latest video', 'balance', 340, 0, 'easy', 'https://tiktok.com/@boltquest'],
-        [4, 'Comment on YouTube', 'Leave a comment on our latest video', 'balance', 510, 0, 'easy', 'https://youtube.com/boltquest'],
-        [5, 'Join Discord Server', 'Join and introduce yourself', 'balance', 765, 0, 'easy', 'https://discord.gg/boltquest'],
-        [6, 'Sign up for VPN Service', 'Complete signup & verify email', 'balance', 4250, 1, 'premium', 'https://vpn.boltquest.com'],
-        [7, 'Download App & Rate', 'Download and rate 5 stars', 'balance', 2550, 1, 'premium', 'https://play.google.com/store'],
-        [8, 'Open Credit Card Account', 'Complete application process', 'balance', 8500, 1, 'premium', 'https://bank.boltquest.com/credit'],
-        [9, 'Create Crypto Account', 'Sign up and verify identity', 'balance', 6375, 1, 'premium', 'https://crypto.boltquest.com'],
-        [10, 'Share Referral Link', 'Refer a friend who completes tasks', 'balance', 17000, 1, 'premium', 'https://boltquest.com/ref?code=aditya']
-      ];
+      const initialTasks = [];
 
       initialTasks.forEach(t => {
         db.run(`
@@ -723,58 +650,7 @@ if (process.env.DATABASE_URL) {
         `, a);
       });
 
-      const initialSurveys = [
-        [
-          1,
-          'Web3 User Survey', 
-          'Help us understand your usage of cryptocurrency and web3 miniapps.', 
-          2550, 
-          300, 
-          5,
-          JSON.stringify([
-            { q: "How often do you trade cryptocurrency?", opts: ["Daily", "Weekly", "Monthly", "Never"] },
-            { q: "What is your preferred crypto wallet?", opts: ["Tonkeeper", "Telegram Wallet", "Metamask", "Trust Wallet"] },
-            { q: "Have you used TON-based miniapps before?", opts: ["Yes, frequently", "Yes, a few times", "No, this is the first", "Unsure"] }
-          ])
-        ],
-        [
-          2,
-          'Gaming Preferences Poll', 
-          'We are building a new game. Tell us what you like to play!', 
-          1275, 
-          150, 
-          3,
-          JSON.stringify([
-            { q: "What genre of mobile games do you play most?", opts: ["RPG / Strategy", "Puzzle / Casual", "Action / Shooters", "Idle / Clickers"] },
-            { q: "How much time do you spend gaming daily?", opts: ["Less than 30 mins", "30 - 60 mins", "1 - 2 hours", "More than 2 hours"] },
-            { q: "Do you like Web3 elements (NFTs/Tokens) in games?", opts: ["Yes, absolutely", "Maybe if it is fun", "No, it ruins games", "Unsure"] }
-          ])
-        ],
-        [
-          3,
-          'VPN Usage Feedback', 
-          'Feedback on VPN speeds and privacy setups.', 
-          1700, 
-          200, 
-          4,
-          JSON.stringify([
-            { q: "Do you currently use a VPN service?", opts: ["Yes, paid service", "Yes, free service", "No, never", "Occasionally"] },
-            { q: "What is the most important VPN feature to you?", opts: ["Connection Speed", "Security & Privacy", "Server Locations", "Low Price"] }
-          ])
-        ],
-        [
-          4,
-          'Telegram Features Poll', 
-          'Tell us what features you want in our Telegram bot ecosystem.', 
-          850, 
-          100, 
-          2,
-          JSON.stringify([
-            { q: "What notification channel do you check most?", opts: ["Telegram DM", "Telegram Channels", "Email", "SMS"] },
-            { q: "Would you invite friends for extra commissions?", opts: ["Yes, definitely", "Maybe", "No", "Unsure"] }
-          ])
-        ]
-      ];
+      const initialSurveys = [];
 
       initialSurveys.forEach(s => {
         db.run(`

@@ -4,6 +4,9 @@ import { Crown, CheckCircle, ShieldAlert, Sparkles, Loader2, Award, ExternalLink
 export default function Premium({ user, subscribePremium, cancelPremium, tasks = [], completeTask }) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
+  const [paymentChoiceOpen, setPaymentChoiceOpen] = useState(false);
+  const [tonTxModalOpen, setTonTxModalOpen] = useState(false);
+  const [tonTxStep, setTonTxStep] = useState('idle'); // 'idle' | 'pending' | 'success'
   
   // Tasks state
   const [proofInputs, setProofInputs] = useState({}); 
@@ -11,18 +14,45 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
 
   const isPremium = user?.premium_status === 1;
 
-  const handleSubscribe = async () => {
+  const handleUpgradeWithCoins = async () => {
+    if (user.balance < 2000) {
+      setMsg('❌ Insufficient Coins balance. You need 2,000 Coins to upgrade.');
+      setPaymentChoiceOpen(false);
+      return;
+    }
     setLoading(true);
     setMsg('');
     try {
-      const data = await subscribePremium();
+      const data = await subscribePremium('coins');
       setMsg(`🎉 Upgrade successful! Welcome to Premium.`);
+      setPaymentChoiceOpen(false);
     } catch (err) {
       console.error(err);
-      setMsg('❌ Upgrade failed. Please check your Stars balance.');
+      setMsg(`❌ Upgrade failed: ${err.message}`);
     } finally {
       setLoading(false);
     }
+  };
+
+  const startTonPayment = () => {
+    setPaymentChoiceOpen(false);
+    setTonTxModalOpen(true);
+    setTonTxStep('pending');
+    
+    // Simulate TON blockchain interaction
+    setTimeout(async () => {
+      const randomHash = '0x' + Array.from({ length: 40 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      try {
+        await subscribePremium('ton', randomHash);
+        setTonTxStep('success');
+        setMsg(`🎉 Upgrade successful! Paid 1.18 TON.`);
+      } catch (err) {
+        console.error(err);
+        setTonTxStep('idle');
+        setTonTxModalOpen(false);
+        setMsg(`❌ TON transaction verification failed.`);
+      }
+    }, 2500);
   };
 
   const handleCancel = async () => {
@@ -100,24 +130,113 @@ export default function Premium({ user, subscribePremium, cancelPremium, tasks =
           </div>
         </div>
       ) : (
-        <div className="card" style={{ border: '1px solid var(--border-color)', textAlign: 'center', padding: '20px' }}>
-          <div style={{ fontSize: '15px', fontWeight: '800', marginBottom: '8px' }}>
+        <div className="card" style={{ border: '1px solid var(--border-color)', padding: '20px', position: 'relative' }}>
+          <div style={{ fontSize: '15px', fontWeight: '800', marginBottom: '8px', textAlign: 'center' }}>
             👑 Upgrade to BoltQuest Premium
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Get early access to premium tasks, 2x earnings boost, and access to exclusive high-payout campaigns.
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '16px', textAlign: 'center' }}>
+            Get early access to premium tasks, 2x earnings boost, and access to exclusive campaigns.
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffd700', marginBottom: '16px' }}>
-            Price: 17,000 Coins / month
-          </div>
-          <button 
-            className="btn-primary" 
-            style={{ background: 'var(--grad-premium)', color: '#fff', width: '100%', padding: '10px' }}
-            onClick={handleSubscribe}
-            disabled={loading}
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" style={{ margin: '0 auto' }} /> : 'Upgrade Now'}
-          </button>
+          
+          {!paymentChoiceOpen ? (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '16px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Option A</div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffd700' }}>2,000 Coins</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>OR</div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>Option B</div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: 'var(--accent-cyan)' }}>1.18 TON</div>
+                </div>
+              </div>
+              <button 
+                className="btn-primary" 
+                style={{ background: 'var(--grad-premium)', color: '#fff', width: '100%', padding: '10px' }}
+                onClick={() => setPaymentChoiceOpen(true)}
+                disabled={loading}
+              >
+                Upgrade Now
+              </button>
+            </>
+          ) : (
+            <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '10px', marginTop: '10px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#fff', marginBottom: '10px', textAlign: 'center' }}>
+                Select Payment Method
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1, padding: '8px 0', fontSize: '11px', borderColor: 'rgba(255, 215, 0, 0.3)' }}
+                  onClick={handleUpgradeWithCoins}
+                  disabled={loading}
+                >
+                  Pay 2,000 Coins
+                </button>
+                <button 
+                  className="btn-secondary" 
+                  style={{ flex: 1, padding: '8px 0', fontSize: '11px', borderColor: 'rgba(0, 212, 255, 0.3)', color: 'var(--accent-cyan)' }}
+                  onClick={startTonPayment}
+                  disabled={loading}
+                >
+                  Pay via TON
+                </button>
+              </div>
+              <button 
+                className="btn-secondary" 
+                style={{ width: '100%', padding: '6px 0', fontSize: '9px', marginTop: '8px', border: 'none', background: 'transparent', color: 'var(--text-muted)' }}
+                onClick={() => setPaymentChoiceOpen(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {/* TON Connect simulated transaction Modal overlay */}
+          {tonTxModalOpen && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0,0,0,0.85)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '20px'
+            }}>
+              <div className="card" style={{ maxWidth: '300px', width: '100%', padding: '20px', border: '1px solid var(--accent-cyan)', textAlign: 'center', background: 'var(--bg-primary)' }}>
+                <div style={{ fontSize: '26px', marginBottom: '8px' }}>💎</div>
+                <div style={{ fontSize: '14px', fontWeight: '800', color: '#fff', marginBottom: '4px' }}>TON Connect</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '16px' }}>Simulating Secure Payout Request</div>
+                
+                {tonTxStep === 'pending' ? (
+                  <>
+                    <Loader2 size={36} className="animate-spin" style={{ margin: '0 auto 16px auto', color: 'var(--accent-cyan)' }} />
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Confirming 1.18 TON transfer from wallet to BoltQuest Contract...</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '32px', color: '#2ed573', marginBottom: '12px' }}>✓</div>
+                    <div style={{ fontSize: '12px', color: '#2ed573', fontWeight: 'bold', marginBottom: '6px' }}>Transaction Confirmed</div>
+                    <div style={{ fontSize: '8px', color: 'var(--text-muted)', wordBreak: 'break-all', fontFamily: 'monospace', marginBottom: '16px' }}>
+                      TxHash: 0x{Array.from({ length: 32 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('')}
+                    </div>
+                    <button 
+                      className="btn-primary" 
+                      style={{ background: 'var(--grad-success)', border: 'none', color: '#000', padding: '8px 16px', fontSize: '11px', fontWeight: 'bold' }}
+                      onClick={() => setTonTxModalOpen(false)}
+                    >
+                      Done
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

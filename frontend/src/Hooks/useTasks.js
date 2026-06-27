@@ -158,12 +158,19 @@ export function useTasks(userId, refreshUserStats) {
   }, [userId]);
 
   // 5. Premium Subscription Actions
-  const subscribePremium = async () => {
+  const subscribePremium = async (paymentMethod = 'coins', txHash = '') => {
     try {
       const res = await fetch(`${API_BASE}/premium/subscribe?userId=${userId}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ paymentMethod, txHash })
       });
-      if (!res.ok) throw new Error('Failed to subscribe');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to subscribe');
+      }
       const data = await res.json();
 
       if (refreshUserStats) await refreshUserStats();

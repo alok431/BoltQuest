@@ -7,9 +7,10 @@ const DEFAULT_USER_ID = 1;
 // POST /api/premium/subscribe
 router.post('/subscribe', async (req, res) => {
   const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { paymentMethod, txHash } = req.body;
 
   try {
-    const result = await subscribePremium(userId);
+    const result = await subscribePremium(userId, paymentMethod, txHash);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });

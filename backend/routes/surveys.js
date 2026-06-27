@@ -134,4 +134,88 @@ router.post('/complete', (req, res) => {
   });
 });
 
+// POST /api/surveys/create
+router.post('/create', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { title, description, reward_amount, time_estimate, questions, paymentMethod, txHash } = req.body;
+
+  if (!title || !questions) {
+    return res.status(400).json({ error: 'Title and Questions are required' });
+  }
+
+  const reward = parseInt(reward_amount, 10) || 850;
+  const points = Math.round(reward * 0.5); // automatically calculate points reward
+  const timeEst = parseInt(time_estimate, 10) || 5;
+  const fee = 2000;
+  const tonFee = 1.18;
+
+  const questionsJson = typeof questions === 'string' ? questions : JSON.stringify(questions);
+
+  db.get('SELECT balance FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (paymentMethod === 'coins') {
+      if (user.balance < fee) {
+        return res.status(400).json({ error: `Insufficient Coins balance. Creating this survey requires ${fee} Coins.` });
+      }
+
+      db.serialize(() => {
+        // Deduct fee
+        db.run(
+          'UPDATE users SET balance = balance - ? WHERE id = ?',
+          [fee, userId],
+          function(updateErr) {
+            if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+            // Create survey
+            db.run(
+              `INSERT INTO surveys (title, description, reward_amount, reward_points, time_estimate, questions_json)
+               VALUES (?, ?, ?, ?, ?, ?)`,
+              [title, description || 'Custom User Survey', reward, points, timeEst, questionsJson],
+              function(insertErr) {
+                if (insertErr) return res.status(500).json({ error: insertErr.message });
+                const newSurveyId = this.lastID;
+
+                // Record transaction
+                db.run(
+                  `INSERT INTO transactions (user_id, type, amount, points, status, details)
+                   VALUES (?, 'campaign_fee', ?, 0, 'completed', ?)`,
+                  [userId, -fee, `Published Survey: ${title} (Survey ID: ${newSurveyId})`]
+                );
+
+                res.json({ success: true, message: 'Survey campaign created successfully!', surveyId: newSurveyId });
+              }
+            );
+          }
+        );
+      });
+    } else {
+      // Payment method = 'ton'
+      const hash = txHash || '0x' + Array.from({ length: 40 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+      
+      db.serialize(() => {
+        db.run(
+          `INSERT INTO surveys (title, description, reward_amount, reward_points, time_estimate, questions_json)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [title, description || 'Custom User Survey', reward, points, timeEst, questionsJson],
+          function(insertErr) {
+            if (insertErr) return res.status(500).json({ error: insertErr.message });
+            const newSurveyId = this.lastID;
+
+            // Record transaction
+            db.run(
+              `INSERT INTO transactions (user_id, type, amount, points, status, details)
+               VALUES (?, 'campaign_fee', ?, 0, 'completed', ?)`,
+              [userId, -tonFee, `Published Survey: ${title} (Paid ${tonFee} TON, Tx: ${hash.substring(0, 10)}...)`]
+            );
+
+            res.json({ success: true, message: 'Survey campaign created successfully!', surveyId: newSurveyId });
+          }
+        );
+      });
+    }
+  });
+});
+
 module.exports = router;

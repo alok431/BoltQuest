@@ -265,7 +265,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
                 </div>
                 <div className="task-desc">{task.description}</div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '4px', fontSize: '10px', color: 'var(--text-secondary)' }}>
-                  <span style={{ color: 'var(--accent-cyan)', fontWeight: '700' }}>+{task.reward_amount.toFixed(2)} TON</span>
+                  <span style={{ color: 'var(--accent-cyan)', fontWeight: '700' }}>+{task.reward_amount} Coins</span>
                   <span>•</span>
                   <span>👥 {task.completion_count} completed</span>
                 </div>
@@ -304,7 +304,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
         </div>
         <div className="stat-card">
           <div className="stat-label">Earnings</div>
-          <div className="stat-value">{user.stats?.todayEarned?.toFixed(2) || '0.00'} TON</div>
+          <div className="stat-value">{user.stats?.todayEarned?.toLocaleString() || '0'} Coins</div>
         </div>
       </div>
 
@@ -323,10 +323,10 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           <div style={{ fontSize: '20px' }}>📋</div>
         </div>
         <div className="progress-bar">
-          <div className="progress-fill" style={{ width: '50%' }}></div>
+          <div className="progress-fill" style={{ width: `${Math.min(Math.round(((user.stats?.todayTasksCompleted || 0) / 10) * 100), 100)}%` }}></div>
         </div>
         <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '6px' }}>
-          5/10 completed
+          {user.stats?.todayTasksCompleted || 0}/10 completed
         </div>
       </div>
 
@@ -342,7 +342,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
               <span className="premium-tag">Premium</span>
             </div>
             <div className="task-desc">Earn double bonus payout this week for verified signups</div>
-            <div className="task-reward" style={{ marginTop: '6px', color: '#ff6b81' }}>+25.00 TON Each</div>
+            <div className="task-reward" style={{ marginTop: '6px', color: '#ff6b81' }}>+42,500 Coins Each</div>
           </div>
           <div style={{ fontSize: '20px' }}>🚀</div>
         </div>
@@ -359,7 +359,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
         </div>
         <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', marginBottom: '8px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Total Earned</span>
-          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.totalEarned?.toFixed(2) || '0.00'} TON</span>
+          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.totalEarned?.toLocaleString() || '0'} Coins</span>
         </div>
         <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Points Gained</span>

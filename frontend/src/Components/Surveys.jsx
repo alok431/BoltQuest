@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ClipboardList, Clock, Gift, Sparkles, Loader2, Check, HelpCircle } from 'lucide-react';
 import { API_BASE } from '../config';
 
-export default function Surveys({ surveys, completeSurvey, user }) {
+export default function Surveys({ surveys, completeSurvey, user, onSwitchTab }) {
   const [activeSurvey, setActiveSurvey] = useState(null);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -236,8 +236,19 @@ export default function Surveys({ surveys, completeSurvey, user }) {
               </div>
 
               {surveys.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '24px', fontSize: '12px' }}>
-                  No daily surveys available right now.
+                <div className="card" style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', margin: '8px 0' }}>
+                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>📋</div>
+                  <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>No Active Daily Surveys</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                    Create custom feedback campaigns and reward participants in Coins!
+                  </div>
+                  <button 
+                    className="btn-primary" 
+                    style={{ width: 'auto', padding: '8px 16px', fontSize: '11px', background: 'var(--grad-cyan-blue)', color: '#000', fontWeight: 'bold', display: 'block', margin: '0 auto' }}
+                    onClick={() => onSwitchTab('create-campaign')}
+                  >
+                    + Create Survey
+                  </button>
                 </div>
               ) : (
                 surveys.map(survey => {

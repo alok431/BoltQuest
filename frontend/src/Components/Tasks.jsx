@@ -3,7 +3,7 @@ import { Play, Check, Loader2, Sparkles } from 'lucide-react';
 
 const AYET_ADSLOT_ID = '27806'; // ayeT-Studios Adslot ID
 
-export default function Tasks({ tasks, completeTask, user }) {
+export default function Tasks({ tasks, completeTask, user, onSwitchTab }) {
   const [loadingTaskId, setLoadingTaskId] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
 
@@ -115,91 +115,125 @@ export default function Tasks({ tasks, completeTask, user }) {
       </div>
 
       <div className="section-title">🪙 Easy Tasks (255 - 850 Coins)</div>
-      {easyTasks.map(task => {
-        const isCompleted = task.user_status === 'completed';
-        const isLoading = loadingTaskId === task.id;
-
-        return (
-          <div className="card" key={task.id}>
-            <div className="task-card">
-              <div className="task-info">
-                <div className="task-title">{task.title}</div>
-                <div className="task-desc">{task.description}</div>
-                <div className="task-reward">
-                  +{task.reward_amount} Coins
-                  {user?.premium_status === 1 && (
-                    <span style={{ fontSize: '10px', color: '#ff6b81', marginLeft: '6px', fontWeight: '700' }}>
-                      (Premium 2x Active)
-                    </span>
-                  )}
-                </div>
-              </div>
-              {isCompleted ? (
-                <button className="start-btn completed-btn" disabled>
-                  <Check size={12} style={{ marginRight: '4px' }} /> Done
-                </button>
-              ) : (
-                <button 
-                  className="start-btn" 
-                  onClick={() => handleStartTask(task)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    <>Start <Play size={10} style={{ marginLeft: '4px', display: 'inline' }} /></>
-                  )}
-                </button>
-              )}
-            </div>
+      {easyTasks.length === 0 ? (
+        <div className="card" style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', margin: '8px 0' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>📣</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>No Active Social Campaigns</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            Be the first to promote your Telegram channels, groups or links!
           </div>
-        );
-      })}
+          <button 
+            className="btn-primary" 
+            style={{ width: 'auto', padding: '8px 16px', fontSize: '11px', background: 'var(--grad-cyan-blue)', color: '#000', fontWeight: 'bold', display: 'block', margin: '0 auto' }}
+            onClick={() => onSwitchTab('create-campaign')}
+          >
+            Create Task Campaign
+          </button>
+        </div>
+      ) : (
+        easyTasks.map(task => {
+          const isCompleted = task.user_status === 'completed';
+          const isLoading = loadingTaskId === task.id;
+
+          return (
+            <div className="card" key={task.id}>
+              <div className="task-card">
+                <div className="task-info">
+                  <div className="task-title">{task.title}</div>
+                  <div className="task-desc">{task.description}</div>
+                  <div className="task-reward">
+                    +{task.reward_amount} Coins
+                    {user?.premium_status === 1 && (
+                      <span style={{ fontSize: '10px', color: '#ff6b81', marginLeft: '6px', fontWeight: '700' }}>
+                        (Premium 2x Active)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {isCompleted ? (
+                  <button className="start-btn completed-btn" disabled>
+                    <Check size={12} style={{ marginRight: '4px' }} /> Done
+                  </button>
+                ) : (
+                  <button 
+                    className="start-btn" 
+                    onClick={() => handleStartTask(task)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <>Start <Play size={10} style={{ marginLeft: '4px', display: 'inline' }} /></>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )}
 
       <div className="section-title" style={{ marginTop: '20px' }}>
         🪙 Premium Tasks (1700 - 8500 Coins) <span className="premium-tag">PREMIUM</span>
       </div>
-      {premiumTasks.map(task => {
-        const isCompleted = task.user_status === 'completed';
-        const isLoading = loadingTaskId === task.id;
-
-        return (
-          <div className="card" key={task.id} style={{ border: '1px solid rgba(255, 71, 87, 0.15)' }}>
-            <div className="task-card">
-              <div className="task-info">
-                <div className="task-title" style={{ color: '#ff6b81' }}>{task.title}</div>
-                <div className="task-desc">{task.description}</div>
-                <div className="task-reward" style={{ color: '#ff6b81' }}>
-                  +{task.reward_amount} Coins
-                  {user?.premium_status === 1 && (
-                    <span style={{ fontSize: '10px', color: '#ff4757', marginLeft: '6px', fontWeight: '700' }}>
-                      (Premium 2x Active)
-                    </span>
-                  )}
-                </div>
-              </div>
-              {isCompleted ? (
-                <button className="start-btn completed-btn" disabled>
-                  <Check size={12} style={{ marginRight: '4px' }} /> Done
-                </button>
-              ) : (
-                <button 
-                  className="start-btn" 
-                  style={{ background: 'var(--grad-premium)' }}
-                  onClick={() => handleStartTask(task)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : (
-                    <>Start <Play size={10} style={{ marginLeft: '4px', display: 'inline' }} /></>
-                  )}
-                </button>
-              )}
-            </div>
+      {premiumTasks.length === 0 ? (
+        <div className="card" style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed var(--border-color)', borderRadius: '12px', margin: '8px 0' }}>
+          <div style={{ fontSize: '24px', marginBottom: '8px' }}>👑</div>
+          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#ff6b81', marginBottom: '4px' }}>No Active Premium Campaigns</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+            Publish premium target campaigns visible only to premium users.
           </div>
-        );
-      })}
+          <button 
+            className="btn-primary" 
+            style={{ width: 'auto', padding: '8px 16px', fontSize: '11px', background: 'var(--grad-premium)', color: '#fff', fontWeight: 'bold', display: 'block', margin: '0 auto' }}
+            onClick={() => onSwitchTab('create-campaign')}
+          >
+            Launch Premium Campaign
+          </button>
+        </div>
+      ) : (
+        premiumTasks.map(task => {
+          const isCompleted = task.user_status === 'completed';
+          const isLoading = loadingTaskId === task.id;
+
+          return (
+            <div className="card" key={task.id} style={{ border: '1px solid rgba(255, 71, 87, 0.15)' }}>
+              <div className="task-card">
+                <div className="task-info">
+                  <div className="task-title" style={{ color: '#ff6b81' }}>{task.title}</div>
+                  <div className="task-desc">{task.description}</div>
+                  <div className="task-reward" style={{ color: '#ff6b81' }}>
+                    +{task.reward_amount} Coins
+                    {user?.premium_status === 1 && (
+                      <span style={{ fontSize: '10px', color: '#ff4757', marginLeft: '6px', fontWeight: '700' }}>
+                        (Premium 2x Active)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {isCompleted ? (
+                  <button className="start-btn completed-btn" disabled>
+                    <Check size={12} style={{ marginRight: '4px' }} /> Done
+                  </button>
+                ) : (
+                  <button 
+                    className="start-btn" 
+                    style={{ background: 'var(--grad-premium)' }}
+                    onClick={() => handleStartTask(task)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <>Start <Play size={10} style={{ marginLeft: '4px', display: 'inline' }} /></>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

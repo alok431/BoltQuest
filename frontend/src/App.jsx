@@ -14,7 +14,7 @@ import Wallet from './Components/Wallet';
 import Profile from './Components/Profile';
 import Surveys from './Components/Surveys';
 import Premium from './Components/Premium';
-import Admin from './Components/Admin';
+import CreateCampaign from './Components/CreateCampaign';
 
 // Styles
 import './Styles/dark-theme.css';
@@ -50,7 +50,9 @@ export default function App() {
     completeTask,
     completeSurvey,
     subscribePremium,
-    cancelPremium
+    cancelPremium,
+    refreshTasks,
+    refreshSurveys
   } = useTasks(userId, refreshUser);
 
   // Referral Deep-linking Attribution Effect
@@ -110,7 +112,7 @@ export default function App() {
       case 'home':
         return <Home user={user} refreshUser={refreshUser} claimDailyBonus={claimDailyBonus} trendingTasks={trendingTasks} completeTask={completeTask} />;
       case 'tasks':
-        return <Tasks tasks={tasks} completeTask={completeTask} user={user} />;
+        return <Tasks tasks={tasks} completeTask={completeTask} user={user} onSwitchTab={handleSwitchTab} />;
       case 'leaderboard':
         return <Leaderboard leaderboard={leaderboard} user={user} />;
       case 'wallet':
@@ -126,7 +128,7 @@ export default function App() {
       case 'profile':
         return <Profile user={user} updateSettings={updateSettings} theme={theme} setTheme={setTheme} tgUser={tgUser} />;
       case 'surveys':
-        return <Surveys surveys={surveys} completeSurvey={completeSurvey} user={user} />;
+        return <Surveys surveys={surveys} completeSurvey={completeSurvey} user={user} onSwitchTab={handleSwitchTab} />;
       case 'premium':
         return (
           <Premium 
@@ -137,8 +139,15 @@ export default function App() {
             completeTask={completeTask}
           />
         );
-      case 'admin':
-        return <Admin />;
+      case 'create-campaign':
+        return (
+          <CreateCampaign 
+            user={user} 
+            refreshUser={refreshUser} 
+            refreshTasks={refreshTasks} 
+            refreshSurveys={refreshSurveys} 
+          />
+        );
       default:
         return <Home user={user} refreshUser={refreshUser} claimDailyBonus={claimDailyBonus} />;
     }
@@ -219,6 +228,27 @@ export default function App() {
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {user && (
+              <div 
+                className="badge" 
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: activeTab === 'create-campaign' ? 'rgba(255, 215, 0, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                  color: activeTab === 'create-campaign' ? '#ffd700' : 'var(--text-secondary)',
+                  borderColor: activeTab === 'create-campaign' ? '#ffd700' : 'var(--border-color)',
+                  boxShadow: activeTab === 'create-campaign' ? '0 0 12px rgba(255, 215, 0, 0.4)' : 'none',
+                  transform: activeTab === 'create-campaign' ? 'scale(1.05)' : 'none',
+                  cursor: 'pointer',
+                  fontWeight: '700'
+                }}
+                onClick={() => handleSwitchTab('create-campaign')}
+              >
+                📣 Create
+              </div>
+            )}
+
             {user?.premium_status === 1 ? (
               <div 
                 className="badge" 
@@ -331,13 +361,6 @@ export default function App() {
           onClick={() => handleSwitchTab('wallet')}
         >
           <span>💳</span><span>Wallet</span>
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-          onClick={() => handleSwitchTab('admin')}
-          style={{ border: '1px dashed rgba(255, 255, 255, 0.2)' }}
-        >
-          <span>🛠️</span><span>Admin</span>
         </button>
       </div>
 
