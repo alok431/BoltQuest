@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Gift, Flame, Zap, Award, CheckCircle, TrendingUp, Loader2, Check, Sparkles } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks = [], completeTask }) {
   const [claiming, setClaiming] = useState(false);
@@ -7,6 +8,68 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
   
   const [loadingTaskId, setLoadingTaskId] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
+
+  // Tap-to-earn logic
+  const [localEnergy, setLocalEnergy] = useState(user?.energy || 500);
+  const [pendingTaps, setPendingTaps] = useState(0);
+  const [tapsFeed, setTapsFeed] = useState([]);
+
+  // Sync energy when user profile object updates from backend
+  useEffect(() => {
+    if (user?.energy !== undefined) {
+      setLocalEnergy(user.energy);
+    }
+  }, [user?.energy]);
+
+  // Client-side Energy Regen (+3 per second)
+  useEffect(() => {
+    const regenTimer = setInterval(() => {
+      setLocalEnergy(prev => Math.min(500, prev + 3));
+    }, 1000);
+    return () => clearInterval(regenTimer);
+  }, []);
+
+  // Debounced Batch Synchronization to Backend Database
+  useEffect(() => {
+    if (pendingTaps === 0) return;
+    const syncTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/user/tap`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'user-id': user.id
+          },
+          body: JSON.stringify({ taps: pendingTaps })
+        });
+        if (!res.ok) throw new Error('Sync failed');
+        setPendingTaps(0);
+        if (refreshUser) refreshUser();
+      } catch (err) {
+        console.error('Failed to sync taps in batch:', err);
+      }
+    }, 1200);
+
+    return () => clearTimeout(syncTimeout);
+  }, [pendingTaps, user.id, refreshUser]);
+
+  const handleTap = (e) => {
+    if (localEnergy <= 0) return;
+
+    setLocalEnergy(prev => Math.max(0, prev - 1));
+    setPendingTaps(prev => prev + 1);
+
+    // Calculate coordinate offsets for floating numbers inside container
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const newTap = { id: Date.now() + Math.random(), x, y };
+
+    setTapsFeed(prev => [...prev, newTap]);
+    setTimeout(() => {
+      setTapsFeed(prev => prev.filter(t => t.id !== newTap.id));
+    }, 800);
+  };
 
   const handleClaimBonus = async () => {
     if (claiming) return;
@@ -46,6 +109,30 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
 
   return (
     <div id="home" className="tab-content-fade">
+      {/* Live Activity Ticker */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        borderBottom: '1px solid var(--border-color)',
+        padding: '6px 12px',
+        margin: '-16px -16px 16px -16px',
+        overflow: 'hidden',
+        whiteSpace: 'nowrap',
+        position: 'relative'
+      }}>
+        <div style={{
+          display: 'inline-block',
+          animation: 'marquee 30s linear infinite',
+          fontSize: '9px',
+          color: 'var(--text-secondary)',
+          fontWeight: '600'
+        }}>
+          🚀 activity: Alex_Crypto completed Instagram Join (+255 Coins) &nbsp;&nbsp;•&nbsp;&nbsp;
+          👑 luna_t upgraded to Premium Membership &nbsp;&nbsp;•&nbsp;&nbsp;
+          💎 John_Web3 withdrew 5.40 TON &nbsp;&nbsp;•&nbsp;&nbsp;
+          ⚡ Aditya completed daily streak claim (+8,500 Coins) &nbsp;&nbsp;•&nbsp;&nbsp;
+          🔒 User_998 activated Streak Freeze protection
+        </div>
+      </div>
       {successInfo && (
         <div style={{
           background: 'linear-gradient(135deg, rgba(46, 213, 115, 0.15) 0%, rgba(123, 237, 159, 0.05) 100%)',
@@ -238,6 +325,84 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
         })()}
       </div>
 
+      {/* Tap-to-Earn Clicker Game */}
+      <div className="card" style={{
+        textAlign: 'center',
+        padding: '20px',
+        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 136, 204, 0.02) 100%)',
+        border: '1px solid rgba(0, 212, 255, 0.15)',
+        marginBottom: '16px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent-cyan)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '12px' }}>
+          ⚡ Tap To Earn
+        </div>
+
+        {/* Tapping Bolt Button */}
+        <div 
+          onClick={handleTap}
+          style={{
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, rgba(0, 136, 204, 0.03) 70%)',
+            border: '2px solid rgba(0, 212, 255, 0.4)',
+            boxShadow: '0 0 20px rgba(0, 212, 255, 0.15)',
+            margin: '0 auto 16px auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            userSelect: 'none',
+            position: 'relative',
+            transform: localEnergy <= 0 ? 'scale(0.95)' : 'none',
+            opacity: localEnergy <= 0 ? '0.6' : '1',
+            transition: 'transform 0.1s ease'
+          }}
+          onMouseDown={(e) => { if(localEnergy > 0) e.currentTarget.style.transform = 'scale(0.92)'; }}
+          onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onTouchStart={(e) => { if(localEnergy > 0) e.currentTarget.style.transform = 'scale(0.92)'; }}
+          onTouchEnd={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+        >
+          <Zap size={56} fill="var(--accent-cyan)" color="var(--accent-cyan)" style={{ filter: 'drop-shadow(0 0 8px rgba(0, 212, 255, 0.6))' }} />
+          
+          {/* Floating numeric taps feed */}
+          {tapsFeed.map(t => (
+            <span 
+              key={t.id} 
+              style={{
+                position: 'absolute',
+                left: t.x,
+                top: t.y,
+                color: '#fff',
+                fontSize: '18px',
+                fontWeight: '900',
+                pointerEvents: 'none',
+                animation: 'floatUp 0.8s ease-out forwards'
+              }}
+            >
+              +1
+            </span>
+          ))}
+        </div>
+
+        {/* Energy Display & Progress */}
+        <div style={{ maxWidth: '200px', margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+            <span>⚡ Energy</span>
+            <span style={{ fontWeight: '700', color: '#fff' }}>{localEnergy} / 500</span>
+          </div>
+          <div className="progress-bar" style={{ height: '6px', background: 'rgba(255,255,255,0.05)' }}>
+            <div className="progress-fill" style={{ width: `${(localEnergy / 500) * 100}%`, background: 'var(--grad-cyan-blue)' }}></div>
+          </div>
+        </div>
+
+        <div style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '8px' }}>
+          Recharges at +3 energy/sec • Tap to earn +1 Coin instantly
+        </div>
+      </div>
+
       {/* Hot & Trending Tasks */}
       <div className="section-title">
         <Flame size={12} color="var(--accent-red)" /> Hot & Trending Tasks
@@ -355,6 +520,17 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.totalEarned?.toLocaleString() || '0'} Coins</span>
         </div>
       </div>
+
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
+        }
+        @keyframes floatUp {
+          0% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+        }
+      `}</style>
     </div>
   );
 }

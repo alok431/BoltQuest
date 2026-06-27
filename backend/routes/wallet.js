@@ -45,6 +45,9 @@ router.post('/withdraw', (req, res) => {
       return res.status(400).json({ error: 'Minimum withdrawal is 5 TON (8,500 Coins)' });
     }
 
+    const serviceFee = tonPayout * 0.05;
+    const netPayout = tonPayout - serviceFee;
+
     // Deduct balance and insert transaction
     db.serialize(() => {
       db.run(
@@ -53,7 +56,7 @@ router.post('/withdraw', (req, res) => {
         function(updateErr) {
           if (updateErr) return res.status(500).json({ error: updateErr.message });
 
-          const details = `Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. ${method || 'TON Wallet'} Payout to ${req.body.address || 'UQDxTONWallet...'}`;
+          const details = `Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Fee: ${serviceFee.toFixed(4)} TON. Net: ${netPayout.toFixed(4)} TON. ${method || 'TON Wallet'} Payout to ${req.body.address || 'UQDxTONWallet...'}`;
           
           db.run(
             `INSERT INTO transactions (user_id, type, amount, points, status, details)
@@ -64,9 +67,11 @@ router.post('/withdraw', (req, res) => {
 
               res.json({
                 success: true,
-                message: `Withdrawal request completed successfully! Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON.`,
+                message: `Withdrawal requested successfully! Converted ${withdrawCoins} Coins to ${tonPayout.toFixed(4)} TON. Net: ${netPayout.toFixed(4)} TON after 5% processing fee.`,
                 withdrawnCoins: withdrawCoins,
                 withdrawnTon: tonPayout,
+                netTon: netPayout,
+                feeTon: serviceFee,
                 newBalance: user.balance - withdrawCoins
               });
             }

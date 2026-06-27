@@ -92,6 +92,9 @@ if (process.env.DATABASE_URL) {
           username VARCHAR(255) NOT NULL,
           email VARCHAR(255),
           ton_wallet VARCHAR(255),
+          streak_freezes INTEGER DEFAULT 0,
+          energy INTEGER DEFAULT 500,
+          last_tap_time VARCHAR(255),
           level INTEGER DEFAULT 1,
           xp INTEGER DEFAULT 0,
           balance DOUBLE PRECISION DEFAULT 0.0,
@@ -104,9 +107,10 @@ if (process.env.DATABASE_URL) {
         )
       `);
 
-      db.run(`ALTER TABLE users ADD COLUMN ton_wallet VARCHAR(255)`, (err) => {
-        // Ignore column already exists error
-      });
+      db.run(`ALTER TABLE users ADD COLUMN ton_wallet VARCHAR(255)`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN streak_freezes INTEGER DEFAULT 0`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN energy INTEGER DEFAULT 500`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN last_tap_time VARCHAR(255)`, (err) => {});
 
       // 2. Tasks Table
       db.run(`
@@ -414,6 +418,9 @@ if (process.env.DATABASE_URL) {
           username TEXT NOT NULL,
           email TEXT,
           ton_wallet TEXT,
+          streak_freezes INTEGER DEFAULT 0,
+          energy INTEGER DEFAULT 500,
+          last_tap_time TEXT,
           level INTEGER DEFAULT 1,
           xp INTEGER DEFAULT 0,
           balance REAL DEFAULT 0.0,
@@ -426,9 +433,10 @@ if (process.env.DATABASE_URL) {
         )
       `);
 
-      db.run(`ALTER TABLE users ADD COLUMN ton_wallet TEXT`, (err) => {
-        // Ignore column already exists error
-      });
+      db.run(`ALTER TABLE users ADD COLUMN ton_wallet TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN streak_freezes INTEGER DEFAULT 0`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN energy INTEGER DEFAULT 500`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN last_tap_time TEXT`, (err) => {});
 
       // 2. Tasks Table
       db.run(`

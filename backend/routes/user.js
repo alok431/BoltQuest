@@ -97,7 +97,7 @@ router.post('/daily-bonus', (req, res) => {
   
   activeDailyBonusClaims.add(userId);
   
-  db.get('SELECT balance, login_streak, last_login_date FROM users WHERE id = ?', [userId], (err, user) => {
+  db.get('SELECT balance, login_streak, last_login_date, streak_freezes FROM users WHERE id = ?', [userId], (err, user) => {
     if (err) {
       activeDailyBonusClaims.delete(userId);
       return res.status(500).json({ error: err.message });
@@ -114,6 +114,7 @@ router.post('/daily-bonus', (req, res) => {
     }
 
     let newStreak = 1;
+    let streakFreezeConsumed = false;
     if (user.last_login_date) {
       const lastLogin = new Date(user.last_login_date);
       const d1 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
@@ -123,8 +124,12 @@ router.post('/daily-bonus', (req, res) => {
       if (diffDays === 1) {
         // Continued streak
         newStreak = ((user.login_streak || 0) % 7) + 1;
+      } else if (diffDays > 1 && user.streak_freezes > 0) {
+        // Streak broken but protected by Streak Freeze!
+        newStreak = ((user.login_streak || 0) % 7) + 1;
+        streakFreezeConsumed = true;
       } else {
-        // Streak broken or double claim bypass
+        // Streak broken
         newStreak = 1;
       }
     } else {
@@ -143,9 +148,13 @@ router.post('/daily-bonus', (req, res) => {
     };
     const bonusAmount = rewards[newStreak] || 4250;
     
-    // Update user balance, login_streak, and last_login_date with condition to block duplicate updates
+    const updateSql = streakFreezeConsumed
+      ? 'UPDATE users SET balance = balance + ?, login_streak = ?, last_login_date = ?, streak_freezes = streak_freezes - 1 WHERE id = ? AND (last_login_date IS NULL OR last_login_date != ?)'
+      : 'UPDATE users SET balance = balance + ?, login_streak = ?, last_login_date = ? WHERE id = ? AND (last_login_date IS NULL OR last_login_date != ?)';
+
+    // Update user balance, login_streak, and last_login_date
     db.run(
-      'UPDATE users SET balance = balance + ?, login_streak = ?, last_login_date = ? WHERE id = ? AND (last_login_date IS NULL OR last_login_date != ?)',
+      updateSql,
       [bonusAmount, newStreak, todayStr, userId, todayStr],
       function(updateErr) {
         activeDailyBonusClaims.delete(userId);
@@ -157,21 +166,117 @@ router.post('/daily-bonus', (req, res) => {
         }
 
         // Record transaction
+        const detailMessage = streakFreezeConsumed
+          ? `Claimed Day ${newStreak} Streak (Protected by Streak Freeze)`
+          : `Claimed Day ${newStreak} Daily Bonus`;
+
         db.run(
           `INSERT INTO transactions (user_id, type, amount, points, status, details)
-           VALUES (?, 'daily_bonus', ?, 0, 'completed', 'Claimed Day ${newStreak} Daily Bonus')`,
-          [userId, bonusAmount]
+           VALUES (?, 'daily_bonus', ?, 0, 'completed', ?)`,
+          [userId, bonusAmount, detailMessage]
         );
 
         res.json({
           success: true,
-          message: `Day ${newStreak} Daily bonus claimed!`,
+          message: streakFreezeConsumed 
+            ? `Day ${newStreak} Claimed! Your streak was restored using a Streak Freeze.` 
+            : `Day ${newStreak} Daily bonus claimed!`,
           bonusAmount,
           newStreak,
-          newBalance: user.balance + bonusAmount
+          newBalance: user.balance + bonusAmount,
+          streakFreezeConsumed
         });
       }
     );
+  });
+});
+
+// POST /api/user/tap
+router.post('/tap', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { taps } = req.body;
+  const tapsCount = parseInt(taps, 10);
+
+  if (isNaN(tapsCount) || tapsCount <= 0) {
+    return res.status(400).json({ error: 'Invalid tap count' });
+  }
+
+  db.get('SELECT balance, energy, last_tap_time FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const now = Date.now();
+    const lastTap = user.last_tap_time ? new Date(user.last_tap_time).getTime() : now - 180000;
+    const timePassedSec = Math.floor((now - lastTap) / 1000);
+    const regeneratedEnergy = Math.min(500, user.energy + Math.max(0, timePassedSec * 3)); // 3 energy per second
+
+    if (tapsCount > regeneratedEnergy + 10) {
+      return res.status(400).json({ error: 'Out of energy! Wait for regeneration.' });
+    }
+
+    const finalEnergy = Math.max(0, regeneratedEnergy - tapsCount);
+    const newBalance = user.balance + tapsCount;
+
+    db.run(
+      'UPDATE users SET balance = ?, energy = ?, last_tap_time = ? WHERE id = ?',
+      [newBalance, finalEnergy, new Date(now).toISOString(), userId],
+      function(updateErr) {
+        if (updateErr) return res.status(500).json({ error: updateErr.message });
+        res.json({ success: true, balance: newBalance, energy: finalEnergy });
+      }
+    );
+  });
+});
+
+// POST /api/user/buy-streak-freeze
+router.post('/buy-streak-freeze', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { paymentMethod, txHash } = req.body;
+
+  db.get('SELECT balance, streak_freezes FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (paymentMethod === 'coins') {
+      const price = 1000;
+      if (user.balance < price) {
+        return res.status(400).json({ error: 'Insufficient Coins balance. Pricing is 1,000 Coins.' });
+      }
+
+      db.serialize(() => {
+        db.run(
+          'UPDATE users SET balance = balance - ?, streak_freezes = streak_freezes + 1 WHERE id = ?',
+          [price, userId],
+          function(updateErr) {
+            if (updateErr) return res.status(500).json({ error: updateErr.message });
+            db.run(
+              `INSERT INTO transactions (user_id, type, amount, points, status, details)
+               VALUES (?, 'item_purchase', ?, 0, 'completed', 'Bought Streak Freeze item')`,
+              [userId, -price]
+            );
+            res.json({ success: true, balance: user.balance - price, streak_freezes: user.streak_freezes + 1 });
+          }
+        );
+      });
+    } else {
+      // Payment method = 'stars' (50 Telegram Stars)
+      db.serialize(() => {
+        db.run(
+          'UPDATE users SET streak_freezes = streak_freezes + 1 WHERE id = ?',
+          [userId],
+          function(updateErr) {
+            if (updateErr) return res.status(500).json({ error: updateErr.message });
+            const hash = txHash || '0x' + Array.from({ length: 16 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+            db.run(
+              `INSERT INTO transactions (user_id, type, amount, points, status, details)
+               VALUES (?, 'item_purchase', 0, 0, 'completed', ?)`,
+              [userId, `Bought Streak Freeze (Paid 50 Stars, Tx: ${hash.substring(0, 8)}...)`]
+            );
+            res.json({ success: true, balance: user.balance, streak_freezes: user.streak_freezes + 1 });
+          }
+        );
+      });
+    }
   });
 });
 
