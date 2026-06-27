@@ -62,7 +62,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           <div style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} /> Task Completed!
           </div>
-          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
+          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong>!</div>
           {successInfo.levelInfo?.leveledUp && (
             <div style={{ color: '#ffd700', fontWeight: '700', marginTop: '4px' }}>
               🎉 Leveled up to Level {successInfo.levelInfo.newLevel}!
@@ -111,13 +111,13 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
             }
 
             return [
-              { day: 1, coins: '850', points: '50' },
-              { day: 2, coins: '1700', points: '100' },
-              { day: 3, coins: '2550', points: '150' },
-              { day: 4, coins: '3400', points: '200' },
-              { day: 5, coins: '4250', points: '250' },
-              { day: 6, coins: '5100', points: '300' },
-              { day: 7, coins: '8500', points: '500' }
+              { day: 1, coins: '850' },
+              { day: 2, coins: '1700' },
+              { day: 3, coins: '2550' },
+              { day: 4, coins: '3400' },
+              { day: 5, coins: '4250' },
+              { day: 6, coins: '5100' },
+              { day: 7, coins: '8500' }
             ].map((item) => {
               // Determine day status
               let isClaimed = false;
@@ -187,13 +187,6 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
                     lineHeight: '1.2'
                   }}>
                     +{item.coins}
-                  </div>
-                  <div style={{ 
-                    fontSize: '7px', 
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    lineHeight: '1'
-                  }}>
-                    {item.points} pts
                   </div>
 
                   <div style={{
@@ -318,7 +311,7 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
             <div className="task-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <CheckCircle size={14} color="#00d4ff" /> Complete 10 Tasks Today
             </div>
-            <div className="task-desc">Get +100 bonus points</div>
+            <div className="task-desc">Get +170 bonus Coins</div>
           </div>
           <div style={{ fontSize: '20px' }}>📋</div>
         </div>
@@ -357,13 +350,9 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           <span style={{ color: 'var(--text-secondary)' }}>Tasks Completed</span>
           <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.tasksCompleted || 0}</span>
         </div>
-        <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', marginBottom: '8px', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', justifyContent: 'space-between' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Total Earned</span>
           <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.stats?.totalEarned?.toLocaleString() || '0'} Coins</span>
-        </div>
-        <div style={{ display: 'flex', justifycontent: 'space-between', fontSize: '12px', justifyContent: 'space-between' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Points Gained</span>
-          <span style={{ color: '#00d4ff', fontWeight: '700' }}>{user.points?.toLocaleString() || 0}</span>
         </div>
       </div>
     </div>

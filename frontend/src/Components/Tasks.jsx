@@ -53,7 +53,7 @@ export default function Tasks({ tasks, completeTask, user, onSwitchTab }) {
           <div style={{ fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={16} /> Task Completed Successfully!
           </div>
-          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong> and <strong>+{successInfo.pointsGained} Points</strong>!</div>
+          <div>You earned <strong>+{successInfo.rewardAmount} Coins</strong>!</div>
           {successInfo.levelInfo?.leveledUp && (
             <div style={{ color: '#ffd700', fontWeight: '700', marginTop: '4px' }}>
               🎉 Leveled up to Level {successInfo.levelInfo.newLevel}!

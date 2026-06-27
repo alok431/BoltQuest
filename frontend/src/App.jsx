@@ -317,9 +317,6 @@ export default function App() {
             <div className="balance-item" onClick={() => handleSwitchTab('wallet')}>
               🪙 {user.balance.toLocaleString()} Coins
             </div>
-            <div className="balance-item points" style={{ cursor: 'default' }}>
-              ⭐ {user.points.toLocaleString()} Points
-            </div>
           </div>
         )}
       </div>
