@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Gift, Flame, Zap, Award, CheckCircle, TrendingUp, Loader2, Check, Sparkles } from 'lucide-react';
 import { API_BASE } from '../config';
 
@@ -8,6 +8,14 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
   
   const [loadingTaskId, setLoadingTaskId] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
+
+  // Story double bonus state
+  const [storyDoubled, setStoryDoubled] = useState(false);
+  const [sharingStory, setSharingStory] = useState(false);
+
+  // Passive Miner state
+  const [minerData, setMinerData] = useState(null);
+  const [minerLoading, setMinerLoading] = useState(false);
 
 
 
@@ -24,6 +32,115 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
       setClaimMessage('❌ Failed to claim daily bonus.');
     } finally {
       setClaiming(false);
+    }
+  };
+
+  const handleShareToStory = async () => {
+    setSharingStory(true);
+    const refLink = `https://t.me/BoltQuestBot?start=${user.telegram_id || user.id}`;
+    
+    try {
+      await navigator.clipboard.writeText(refLink);
+    } catch (e) {
+      console.warn("Clipboard write failed:", e);
+    }
+
+    if (window.Telegram?.WebApp?.shareToStory) {
+      window.Telegram.WebApp.shareToStory(
+        "https://boltquest.com/images/story-card.jpg",
+        `Claim daily coins on BoltQuest and convert them to real TON! ⚡ Here's my join link: ${refLink}`
+      );
+    } else {
+      alert(`Story sharing simulated! Your referral link has been copied: ${refLink}. Publish it to your story to claim your reward.`);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/user/daily-bonus/double`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'user-id': user.id
+        }
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to double bonus');
+      }
+      const data = await res.json();
+      setClaimMessage(`🎉 Success! Doubled today's bonus: +${data.doubledAmount} Coins!`);
+      setStoryDoubled(true);
+      if (refreshUser) refreshUser();
+    } catch (err) {
+      console.error(err);
+      setClaimMessage(`❌ Error: ${err.message}`);
+    } finally {
+      setSharingStory(false);
+    }
+  };
+
+  const fetchMinerStatus = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_BASE}/user/miner-status`, {
+        headers: { 'user-id': user.id }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMinerData(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch miner status:", err);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchMinerStatus();
+  }, [fetchMinerStatus]);
+
+  // Live Tick for passive miner
+  useEffect(() => {
+    if (!minerData) return;
+    const interval = setInterval(() => {
+      setMinerData(prev => {
+        if (!prev) return null;
+        const addPerSec = prev.ratePerHour / 3600.0;
+        const newAccumulated = Math.min(prev.maxCapacity, prev.accumulatedCoins + (addPerSec * 2));
+        const newPercent = Math.min(100, Math.floor((newAccumulated / prev.maxCapacity) * 100));
+        return {
+          ...prev,
+          accumulatedCoins: newAccumulated,
+          percentFull: newPercent
+        };
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [minerData]);
+
+  const handleClaimMiner = async () => {
+    setMinerLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/user/miner-claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'user-id': user.id
+        }
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to claim miner');
+      }
+      const data = await res.json();
+      setClaimMessage(`🎉 Claimed ${data.claimedAmount.toFixed(2)} Coins from Bolt Generator!`);
+      setTimeout(() => setClaimMessage(''), 4500);
+      
+      if (refreshUser) refreshUser();
+      await fetchMinerStatus();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Claim failed');
+    } finally {
+      setMinerLoading(false);
     }
   };
 
@@ -254,15 +371,100 @@ export default function Home({ user, refreshUser, claimDailyBonus, trendingTasks
           const hasClaimedToday = user.last_login_date === todayStr;
 
           return (
-            <button 
-              className="bonus-btn" 
-              onClick={handleClaimBonus}
-              disabled={claiming || hasClaimedToday}
-            >
-              {claiming ? 'Claiming...' : hasClaimedToday ? 'Already Claimed Today' : 'Claim Daily Bonus!'}
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button 
+                className="bonus-btn" 
+                onClick={handleClaimBonus}
+                disabled={claiming || hasClaimedToday}
+              >
+                {claiming ? 'Claiming...' : hasClaimedToday ? 'Already Claimed Today' : 'Claim Daily Bonus!'}
+              </button>
+
+              {hasClaimedToday && !storyDoubled && (
+                <button 
+                  className="bonus-btn"
+                  style={{
+                    background: 'linear-gradient(135deg, #00d4ff 0%, #0088cc 100%)',
+                    color: '#000',
+                    border: 'none',
+                    fontWeight: '900',
+                    boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)'
+                  }}
+                  onClick={handleShareToStory}
+                  disabled={sharingStory}
+                >
+                  {sharingStory ? 'Doubling Reward...' : '⚡ Share Story to Double Reward!'}
+                </button>
+              )}
+            </div>
           );
         })()}
+      </div>
+
+      {/* ⚡ BOLT GENERATOR (Passive Miner) */}
+      <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Zap size={12} color="var(--accent-cyan)" /> ⚡ BOLT PASSIVE GENERATOR
+      </div>
+      <div className="card" style={{
+        background: 'linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 136, 204, 0.01) 100%)',
+        border: '1px solid rgba(0, 212, 255, 0.15)',
+        marginBottom: '16px',
+        padding: '16px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent-cyan)' }}>
+              ⚡ Generator (Level {user.level || 1})
+            </div>
+            <div style={{ fontSize: '9px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              Generates passive coins. Fills up every 6 hours.
+            </div>
+          </div>
+          <div style={{ background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '8px', fontSize: '9px', fontWeight: 'bold', border: '1px solid var(--border-color)', color: 'var(--accent-cyan)', whiteSpace: 'nowrap' }}>
+            Rate: {minerData ? minerData.ratePerHour.toFixed(2) : '5.00'} Coins/hr
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '8px' }}>
+          <div>
+            <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '2px' }}>
+              Accumulated Storage
+            </div>
+            <div style={{ fontSize: '20px', fontWeight: '900', color: '#fff' }}>
+              🪙 {minerData ? minerData.accumulatedCoins.toFixed(4) : '0.0000'}
+            </div>
+          </div>
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+            {minerData ? `${minerData.percentFull}% Full` : '0% Full'}
+          </div>
+        </div>
+
+        <div className="progress-bar" style={{ height: '8px', background: 'rgba(255,255,255,0.05)', marginBottom: '12px', borderRadius: '4px' }}>
+          <div className="progress-fill" style={{
+            width: `${minerData ? minerData.percentFull : 0}%`,
+            background: 'linear-gradient(90deg, var(--accent-cyan), #0088cc)',
+            borderRadius: '4px',
+            transition: 'width 0.5s ease-in-out'
+          }}></div>
+        </div>
+
+        <button 
+          className="btn-primary" 
+          style={{
+            background: 'var(--grad-cyan-blue)',
+            color: '#000',
+            fontWeight: '800',
+            padding: '10px',
+            fontSize: '11px',
+            border: 'none',
+            borderRadius: '10px',
+            width: '100%'
+          }}
+          onClick={handleClaimMiner}
+          disabled={minerLoading || !minerData || minerData.accumulatedCoins < 0.01}
+        >
+          {minerLoading ? <Loader2 size={16} className="animate-spin" style={{ margin: '0 auto' }} /> : 'Claim Miner Earnings'}
+        </button>
       </div>
 
       {/* ⚡ SUPER CHARGED TASKS (CPA / Affiliate High-Yield Section) */}

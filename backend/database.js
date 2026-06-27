@@ -103,6 +103,7 @@ if (process.env.DATABASE_URL) {
           premium_expiry VARCHAR(255),
           login_streak INTEGER DEFAULT 0,
           last_login_date VARCHAR(255),
+          last_miner_claim_time VARCHAR(255),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -111,6 +112,7 @@ if (process.env.DATABASE_URL) {
       db.run(`ALTER TABLE users ADD COLUMN streak_freezes INTEGER DEFAULT 0`, (err) => {});
       db.run(`ALTER TABLE users ADD COLUMN energy INTEGER DEFAULT 500`, (err) => {});
       db.run(`ALTER TABLE users ADD COLUMN last_tap_time VARCHAR(255)`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN last_miner_claim_time VARCHAR(255)`, (err) => {});
 
       // 2. Tasks Table
       db.run(`
@@ -429,6 +431,7 @@ if (process.env.DATABASE_URL) {
           premium_expiry TEXT,
           login_streak INTEGER DEFAULT 0,
           last_login_date TEXT,
+          last_miner_claim_time TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -437,6 +440,7 @@ if (process.env.DATABASE_URL) {
       db.run(`ALTER TABLE users ADD COLUMN streak_freezes INTEGER DEFAULT 0`, (err) => {});
       db.run(`ALTER TABLE users ADD COLUMN energy INTEGER DEFAULT 500`, (err) => {});
       db.run(`ALTER TABLE users ADD COLUMN last_tap_time TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN last_miner_claim_time TEXT`, (err) => {});
 
       // 2. Tasks Table
       db.run(`

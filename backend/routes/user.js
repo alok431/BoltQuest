@@ -190,10 +190,211 @@ router.post('/daily-bonus', (req, res) => {
     );
   });
 });
+// POST /api/user/daily-bonus/double
+router.post('/daily-bonus/double', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const todayStr = new Date().toISOString().split('T')[0];
 
+  // 1. Check if user already got double bonus today
+  db.get(
+    `SELECT id FROM transactions 
+     WHERE user_id = ? AND type = 'daily_bonus_double' 
+     AND created_at >= ?`,
+    [userId, todayStr + ' 00:00:00'],
+    (err, doubleRow) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (doubleRow) {
+        return res.status(400).json({ error: 'You have already doubled today\'s reward.' });
+      }
 
+      // 2. Get the daily bonus claimed today
+      db.get(
+        `SELECT amount FROM transactions 
+         WHERE user_id = ? AND type = 'daily_bonus' 
+         AND created_at >= ? 
+         ORDER BY created_at DESC LIMIT 1`,
+        [userId, todayStr + ' 00:00:00'],
+        (err2, bonusRow) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          if (!bonusRow) {
+            return res.status(400).json({ error: 'Please claim today\'s daily bonus first.' });
+          }
 
+          const doubleAmount = Math.abs(bonusRow.amount);
 
+          // 3. Update user balance and insert double bonus transaction
+          db.serialize(() => {
+            db.run(
+              'UPDATE users SET balance = balance + ? WHERE id = ?',
+              [doubleAmount, userId],
+              function(updateErr) {
+                if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+                db.run(
+                  `INSERT INTO transactions (user_id, type, amount, points, status, details)
+                   VALUES (?, 'daily_bonus_double', ?, 0, 'completed', 'Doubled Daily Bonus via Telegram Story Share')`,
+                  [userId, doubleAmount],
+                  function(insertErr) {
+                    if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+                    db.get('SELECT balance FROM users WHERE id = ?', [userId], (err3, userRow) => {
+                      res.json({
+                        success: true,
+                        message: '🎉 Today\'s reward doubled successfully!',
+                        doubledAmount: doubleAmount,
+                        newBalance: userRow?.balance || 0
+                      });
+                    });
+                  }
+                );
+              }
+            );
+          });
+        }
+      );
+    }
+  );
+});
+
+// GET /api/user/miner-status
+router.get('/miner-status', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+
+  db.get('SELECT level, xp, last_miner_claim_time, created_at FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const level = user.level || 1;
+    const xp = user.xp || 0;
+    const ratePerHour = level * 5.0 + (xp * 0.01);
+    const capacityHours = 6.0;
+    const maxCapacity = ratePerHour * capacityHours;
+
+    const now = Date.now();
+    const defaultStartTime = new Date(user.created_at || now).getTime() - (capacityHours * 60 * 60 * 1000);
+    const lastClaim = user.last_miner_claim_time ? new Date(user.last_miner_claim_time).getTime() : defaultStartTime;
+
+    const timePassedMs = now - lastClaim;
+    const timePassedHours = Math.max(0, timePassedMs / (1000 * 60 * 60));
+    const accumulatedCoins = parseFloat(Math.min(maxCapacity, timePassedHours * ratePerHour).toFixed(4));
+    const percentFull = Math.min(100, Math.floor((timePassedHours / capacityHours) * 100));
+    const secondsRemaining = Math.max(0, Math.floor((capacityHours * 60 * 60 * 1000 - timePassedMs) / 1000));
+
+    res.json({
+      accumulatedCoins,
+      ratePerHour,
+      maxCapacity,
+      percentFull,
+      secondsRemaining,
+      lastClaimTime: user.last_miner_claim_time || null
+    });
+  });
+});
+
+// POST /api/user/miner-claim
+router.post('/miner-claim', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+
+  db.get('SELECT balance, level, xp, last_miner_claim_time, created_at FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const level = user.level || 1;
+    const xp = user.xp || 0;
+    const ratePerHour = level * 5.0 + (xp * 0.01);
+    const capacityHours = 6.0;
+    const maxCapacity = ratePerHour * capacityHours;
+
+    const now = Date.now();
+    const defaultStartTime = new Date(user.created_at || now).getTime() - (capacityHours * 60 * 60 * 1000);
+    const lastClaim = user.last_miner_claim_time ? new Date(user.last_miner_claim_time).getTime() : defaultStartTime;
+
+    const timePassedMs = now - lastClaim;
+    const timePassedHours = Math.max(0, timePassedMs / (1000 * 60 * 60));
+    const accumulatedCoins = parseFloat(Math.min(maxCapacity, timePassedHours * ratePerHour).toFixed(4));
+
+    if (accumulatedCoins <= 0.01) {
+      return res.status(400).json({ error: 'Storage tank has too few coins to claim (min. 0.01).' });
+    }
+
+    db.serialize(() => {
+      db.run(
+        'UPDATE users SET balance = balance + ?, last_miner_claim_time = ? WHERE id = ?',
+        [accumulatedCoins, new Date(now).toISOString(), userId],
+        function(updateErr) {
+          if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+          db.run(
+            `INSERT INTO transactions (user_id, type, amount, points, status, details)
+             VALUES (?, 'miner_claim', ?, 0, 'completed', 'Claimed passive Bolt Generator earnings')`,
+            [userId, accumulatedCoins],
+            function(insertErr) {
+              if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+              res.json({
+                success: true,
+                message: `🎉 Claimed ${accumulatedCoins.toFixed(2)} Coins from Bolt Generator!`,
+                claimedAmount: accumulatedCoins,
+                newBalance: user.balance + accumulatedCoins
+              });
+            }
+          );
+        }
+      );
+    });
+  });
+});
+
+// POST /api/user/claim-chest
+router.post('/claim-chest', (req, res) => {
+  const userId = req.headers['user-id'] || DEFAULT_USER_ID;
+  const { chestType } = req.body;
+
+  db.get('SELECT balance, premium_status FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    let reward = 0;
+    let label = '';
+    if (chestType === 'bronze') {
+      reward = 100;
+      label = 'Bronze Adsgram Chest';
+    } else if (chestType === 'silver') {
+      reward = 250;
+      label = 'Silver Adsgram Chest';
+    } else if (chestType === 'gold') {
+      reward = 600;
+      label = 'Gold Adsgram Chest';
+    } else {
+      return res.status(400).json({ error: 'Invalid chest type' });
+    }
+
+    db.serialize(() => {
+      db.run(
+        'UPDATE users SET balance = balance + ? WHERE id = ?',
+        [reward, userId],
+        function(updateErr) {
+          if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+          db.run(
+            `INSERT INTO transactions (user_id, type, amount, points, status, details)
+             VALUES (?, 'chest_claim', ?, 0, 'completed', ?)`,
+            [userId, reward, `Opened ${label} reward`],
+            function(insertErr) {
+              if (insertErr) return res.status(500).json({ error: insertErr.message });
+              res.json({
+                success: true,
+                message: `🎉 Opened ${label} and earned ${reward} Coins!`,
+                claimedAmount: reward,
+                newBalance: user.balance + reward
+              });
+            }
+          );
+        }
+      );
+    });
+  });
+});
 
 // POST /api/user/settings
 router.post('/settings', (req, res) => {

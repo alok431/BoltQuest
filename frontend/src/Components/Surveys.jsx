@@ -261,7 +261,7 @@ export default function Surveys({ surveys, completeSurvey, user, onSwitchTab }) 
                           <div className="task-title" style={{ fontSize: '13px', fontWeight: '700' }}>
                             {survey.title}
                           </div>
-                          <div className="task-desc" style={{ fontSize: '11px', marginTop: '2px' }}>
+                          <div className="task-desc" style={{ fontSize: '11px', marginTop: '2px', color: '#b2bec3' }}>
                             {survey.description}
                           </div>
                           

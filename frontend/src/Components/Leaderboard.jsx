@@ -62,6 +62,69 @@ export default function Leaderboard({ leaderboard, user }) {
         </div>
       )}
 
+      {/* 🏆 Weekly Season Prize Pool Card */}
+      <div className="card" style={{
+        background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 71, 87, 0.05) 100%)',
+        border: '1px solid rgba(255, 215, 0, 0.3)',
+        boxShadow: '0 0 15px rgba(255, 215, 0, 0.08)',
+        padding: '16px',
+        marginBottom: '16px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--accent-gold)' }}>
+            🏆 WEEKLY SEASON #4 (LIVE)
+          </div>
+          <div style={{
+            background: 'rgba(255, 71, 87, 0.15)',
+            color: 'var(--accent-red)',
+            fontSize: '8px',
+            fontWeight: '900',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            Ends in: 2d 14h
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div>
+            <div style={{ fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '2px' }}>
+              Season Prize Pool
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: '#ffd700' }}>
+              💎 50.00 TON <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>(~$350 USD)</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '26px' }}>👑</div>
+        </div>
+
+        <div style={{
+          fontSize: '9px',
+          color: 'var(--text-secondary)',
+          background: 'var(--bg-secondary)',
+          padding: '8px',
+          borderRadius: '8px',
+          border: '1px solid var(--border-color)',
+          lineHeight: '1.4',
+          marginBottom: '10px'
+        }}>
+          <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>Pool Distribution:</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>🥇 1st Place: <strong>20 TON</strong></span>
+            <span>🥈 2nd-3rd: <strong>10 TON</strong></span>
+            <span>🥉 4th-10th: <strong>2 TON</strong></span>
+          </div>
+        </div>
+        
+        <div style={{ fontSize: '8px', color: 'var(--text-muted)', textAlign: 'center' }}>
+          Earn coins from Torox, ayeT, and Notik offerwalls to climb the standings. Only the top 50 users qualify!
+        </div>
+      </div>
+
       {/* Part 1: Global Top Referrals */}
       <div className="section-title" style={{ marginTop: '5px' }}>
         <Users size={12} color="var(--accent-cyan)" /> Global Top Referrals

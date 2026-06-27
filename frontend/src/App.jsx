@@ -112,7 +112,7 @@ export default function App() {
       case 'home':
         return <Home user={user} refreshUser={refreshUser} claimDailyBonus={claimDailyBonus} trendingTasks={trendingTasks} completeTask={completeTask} />;
       case 'tasks':
-        return <Tasks tasks={tasks} completeTask={completeTask} user={user} onSwitchTab={handleSwitchTab} />;
+        return <Tasks tasks={tasks} completeTask={completeTask} user={user} onSwitchTab={handleSwitchTab} refreshUser={refreshUser} />;
       case 'leaderboard':
         return <Leaderboard leaderboard={leaderboard} user={user} />;
       case 'wallet':
