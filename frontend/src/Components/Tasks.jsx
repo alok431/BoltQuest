@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Play, Check, Loader2, Sparkles } from 'lucide-react';
 
-const AYET_ADSLOT_ID = 'ayet_adslot_id_placeholder'; // Replace with your actual ayeT-Studios Adslot ID from the publisher dashboard
+const AYET_ADSLOT_ID = '27806'; // ayeT-Studios Adslot ID
 
 export default function Tasks({ tasks, completeTask, user }) {
   const [loadingTaskId, setLoadingTaskId] = useState(null);
