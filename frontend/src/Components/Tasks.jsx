@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Check, Loader2, Sparkles } from 'lucide-react';
+import { Play, Check, Loader2, Sparkles, ArrowLeft, ExternalLink } from 'lucide-react';
 import { API_BASE } from '../config';
 
 const AYET_ADSLOT_ID = '27806'; // ayeT-Studios Adslot ID
@@ -7,6 +7,8 @@ const AYET_ADSLOT_ID = '27806'; // ayeT-Studios Adslot ID
 export default function Tasks({ tasks, completeTask, user, onSwitchTab, refreshUser }) {
   const [loadingTaskId, setLoadingTaskId] = useState(null);
   const [successInfo, setSuccessInfo] = useState(null);
+  const [activeOfferwall, setActiveOfferwall] = useState(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
 
   // Mystery chests ad state
   const [adModalOpen, setAdModalOpen] = useState(false);
@@ -110,6 +112,145 @@ export default function Tasks({ tasks, completeTask, user, onSwitchTab, refreshU
   const easyTasks = tasks.filter(t => t.is_premium === 0);
   const premiumTasks = tasks.filter(t => t.is_premium === 1);
 
+  const getOfferwallUrl = (type) => {
+    switch (type) {
+      case 'torox':
+        return `https://web.torox.com/offerwall?pubid=24890&subid=${user?.id || 1}`;
+      case 'ayet':
+        return `https://www.ayetstudios.com/offers/web_offerwall/${AYET_ADSLOT_ID}?external_identifier=${user?.id || 1}`;
+      case 'monlix':
+        return `https://offers.monlix.com/?appid=monlix_app_id_placeholder&userid=${user?.id || 1}`;
+      default:
+        return '';
+    }
+  };
+
+  const getOfferwallTitle = (type) => {
+    switch (type) {
+      case 'torox':
+        return 'Torox Wall';
+      case 'ayet':
+        return 'ayeT Studios';
+      case 'monlix':
+        return 'Monlix Wall';
+      default:
+        return '';
+    }
+  };
+
+  if (activeOfferwall) {
+    const url = getOfferwallUrl(activeOfferwall);
+    const title = getOfferwallTitle(activeOfferwall);
+
+    return (
+      <div className="tab-content-fade" id="tasks">
+        <button
+          onClick={() => {
+            setActiveOfferwall(null);
+            setIframeLoading(true);
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-primary)',
+            padding: '8px 16px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            fontSize: '12px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            transition: 'var(--transition-smooth)'
+          }}
+        >
+          <ArrowLeft size={14} /> Back to Tasks
+        </button>
+
+        <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <span>🔌 {title}</span>
+          <button
+            onClick={() => window.open(url, '_blank')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--accent-cyan)',
+              fontSize: '11px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            Open in Browser <ExternalLink size={12} />
+          </button>
+        </div>
+
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '12px',
+          padding: '12px',
+          marginBottom: '16px',
+          fontSize: '11px',
+          color: 'var(--text-secondary)',
+          lineHeight: '1.5'
+        }}>
+          <div style={{ fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            💡 Quick Tips:
+          </div>
+          Complete tasks to earn coins instantly. If your reward is delayed, check the support/history section inside the offerwall provider.
+        </div>
+
+        <div style={{ position: 'relative', width: '100%', borderRadius: '12px', overflow: 'hidden' }}>
+          {iframeLoading && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '550px',
+              background: 'var(--bg-secondary)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              zIndex: 1
+            }}>
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-cyan)' }} />
+              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Loading Secure Offerwall...</span>
+            </div>
+          )}
+          <div style={{
+            width: '100%',
+            height: '550px',
+            overflow: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            background: 'var(--bg-secondary)',
+            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)'
+          }}>
+            <iframe
+              src={url}
+              title={title}
+              onLoad={() => setIframeLoading(false)}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                display: 'block'
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="tasks" className="tab-content-fade">
       {successInfo && (
@@ -159,7 +300,7 @@ export default function Tasks({ tasks, completeTask, user, onSwitchTab, refreshU
           <button 
             className="btn-primary" 
             style={{ width: '100%', padding: '6px', fontSize: '10px', background: 'var(--grad-cyan-blue)', color: '#000', fontWeight: '700' }}
-            onClick={() => window.open(`https://web.torox.com/offerwall?pubid=24890&subid=${user?.id || 1}`, '_blank')}
+            onClick={() => setActiveOfferwall('torox')}
           >
             Open Torox
           </button>
@@ -175,25 +316,59 @@ export default function Tasks({ tasks, completeTask, user, onSwitchTab, refreshU
           <button 
             className="btn-primary" 
             style={{ width: '100%', padding: '6px', fontSize: '10px', background: 'var(--grad-premium)', color: '#fff', fontWeight: '700' }}
-            onClick={() => window.open(`https://www.ayetstudios.com/offers/web_offerwall/${AYET_ADSLOT_ID}?external_identifier=${user?.id || 1}`, '_blank')}
+            onClick={() => setActiveOfferwall('ayet')}
           >
             Open ayeT
           </button>
         </div>
 
-        {/* Notik.me Card */}
-        <div className="card" style={{ flex: '0 0 115px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '10px', border: '1px solid rgba(255, 215, 0, 0.15)', margin: 0 }}>
+        {/* Monlix Card (Pending Approval) */}
+        <div className="card" style={{ 
+          flex: '0 0 115px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          textAlign: 'center', 
+          padding: '10px', 
+          border: '1px solid rgba(255, 255, 255, 0.1)', 
+          margin: 0,
+          opacity: 0.6,
+          position: 'relative'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            background: 'var(--accent-red, #ff4757)',
+            color: '#fff',
+            fontSize: '6px',
+            fontWeight: '900',
+            padding: '2px 4px',
+            borderRadius: '4px',
+            textTransform: 'uppercase'
+          }}>
+            Pending
+          </div>
           <div style={{ fontSize: '20px', marginBottom: '4px' }}>📈</div>
-          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-primary)' }}>Notik Offerwall</div>
-          <div style={{ fontSize: '8px', color: 'var(--text-secondary)', margin: '4px 0 8px 0', minHeight: '30px' }}>
-            Answer quick quiz polls & claim payouts.
+          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-secondary)' }}>Monlix Wall</div>
+          <div style={{ fontSize: '8px', color: 'var(--text-muted)', margin: '4px 0 8px 0', minHeight: '30px' }}>
+            Complete simple offers, surveys & tasks.
           </div>
           <button 
             className="btn-primary" 
-            style={{ width: '100%', padding: '6px', fontSize: '10px', background: 'var(--grad-gold-orange)', color: '#000', fontWeight: '700' }}
-            onClick={() => window.open(`https://notik.me/coins?api_key=notik_api_key_placeholder&pubid=24890&subid=${user?.id || 1}`, '_blank')}
+            disabled
+            style={{ 
+              width: '100%', 
+              padding: '6px', 
+              fontSize: '10px', 
+              background: 'rgba(255,255,255,0.08)', 
+              color: 'var(--text-muted)', 
+              fontWeight: '700',
+              cursor: 'not-allowed',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }}
           >
-            Open Notik
+            Coming Soon
           </button>
         </div>
       </div>

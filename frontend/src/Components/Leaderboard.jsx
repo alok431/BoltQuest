@@ -121,7 +121,7 @@ export default function Leaderboard({ leaderboard, user }) {
         </div>
         
         <div style={{ fontSize: '8px', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Earn coins from Torox, ayeT, and Notik offerwalls to climb the standings. Only the top 50 users qualify!
+          Earn coins from Torox, ayeT, and Monlix offerwalls to climb the standings. Only the top 50 users qualify!
         </div>
       </div>
 

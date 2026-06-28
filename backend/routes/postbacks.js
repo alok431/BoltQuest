@@ -6,7 +6,7 @@ const { addXP } = require('../services/levelingService');
 
 // Replace these with your actual App Secrets from the publisher panels
 const TOROX_SECRET_KEY = process.env.TOROX_SECRET_KEY || 'your_torox_secret_key_here';
-const NOTIK_SECRET_KEY = process.env.NOTIK_SECRET_KEY || 'your_notik_secret_key_here';
+const MONLIX_SECRET_KEY = process.env.MONLIX_SECRET_KEY || 'your_monlix_secret_key_here';
 const AYET_API_KEY = process.env.AYET_API_KEY || 'your_ayet_api_key_here';
 const CPX_SECRET_KEY = process.env.CPX_SECRET_KEY || 'your_cpx_secret_key_here';
 
@@ -56,43 +56,49 @@ router.get('/torox', (req, res) => {
 });
 
 /**
- * 2. NOTIK.ME POSTBACK WEBHOOK
- * Notik sends GET requests. Example parameters:
- * /api/postback/notik?user_id=1&amount=10.00&offer_name=LordsMobile&hash=HASH
+ * 2. MONLIX POSTBACK WEBHOOK
+ * Monlix sends GET requests. Example parameters:
+ * /api/postback/monlix?userId=1&rewardValue=10.00&taskName=LordsMobile&transactionId=12345&status=1&secretKey=secret
  */
-router.get('/notik', (req, res) => {
-  const { user_id, amount, offer_name, hash, txn_id } = req.query;
+router.get('/monlix', (req, res) => {
+  const { userId, rewardValue, taskName, transactionId, status, secretKey } = req.query;
 
-  if (!user_id || !amount || !hash) {
+  if (!userId || !rewardValue || !transactionId || !status || !secretKey) {
     return res.status(400).send('Missing required parameters');
   }
 
-  // Notik signature formula: sha256(txn_id + secret_key)
-  const computedHash = crypto
-    .createHash('sha256')
-    .update(`${txn_id}${NOTIK_SECRET_KEY}`)
-    .digest('hex');
-
-  if (hash !== computedHash && NOTIK_SECRET_KEY !== 'your_notik_secret_key_here') {
-    return res.status(403).send('Invalid signature');
+  // Verify secret key
+  if (secretKey !== MONLIX_SECRET_KEY && MONLIX_SECRET_KEY !== 'your_monlix_secret_key_here') {
+    return res.status(403).send('Invalid secret key');
   }
 
-  const rewardAmount = parseFloat(amount);
+  const rewardAmount = parseFloat(rewardValue);
+  const isReversal = status === '2' || String(status) === '2';
+  let txType = 'task_earning';
+  let txDetails = `Monlix Offerwall: ${taskName || 'Offer completed'}`;
+  let finalReward = rewardAmount;
 
+  if (isReversal) {
+    finalReward = -rewardAmount;
+    txType = 'task_reversal';
+    txDetails = `Monlix Reversal: ${taskName || 'Offer charged back'}`;
+  }
+
+  // Credit or deduct user balance in SQLite
   db.run(
     'UPDATE users SET balance = balance + ?, points = points + ? WHERE id = ?',
-    [rewardAmount, Math.round(rewardAmount * 100), user_id],
+    [finalReward, Math.round(finalReward * 100), userId],
     function(err) {
       if (err) return res.status(500).send(err.message);
 
       // Record transaction
       db.run(
         `INSERT INTO transactions (user_id, type, amount, points, status, details)
-         VALUES (?, 'task_earning', ?, ?, 'completed', ?)`,
-        [user_id, rewardAmount, Math.round(rewardAmount * 100), `Notik Offerwall: ${offer_name || 'Offer completed'}`]
+         VALUES (?, ?, ?, ?, 'completed', ?)`,
+        [userId, txType, finalReward, Math.round(finalReward * 100), txDetails]
       );
 
-      res.json({ success: true });
+      res.status(200).send('OK');
     }
   );
 });
